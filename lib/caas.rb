@@ -91,8 +91,10 @@ class CaaS
   end
 
   def onboard(args)
-    json_to_hash(post(:uri          => "#{args.delete(:account)[:account_uri]}/onboard",
-                      :body         => args,
+    vmtemplates_uri = args[:vmtemplates][:vmtemplates_uri] || '/vmtemplates'
+    json_to_hash(post(:uri          => "#{args[:account][:account_uri]}/onboard",
+                      :body         => {:location_uri=> "#{args[:location][:location_uri]}/",
+                                        :vmtemplates_uri => vmtemplates_uri},
                       :accept       => cloud_type('common.Messages'),
                       :content_type => cloud_type('Onboard')))
   end
@@ -205,14 +207,17 @@ class CaaS
   end
 
   def get_location(args)
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('Location')))
   end
 
-  def get_all_locations(args)
+  def get_all_locations
+    get_all(:location, args)
   end
 
   def list_locations
     json_to_hash(get(:uri    => '/locations',
-                     :accept => cloud_type_with_common('Location')))
+                     :accept => cloud_type('Location')))
   end
 
   ####----
@@ -227,14 +232,17 @@ class CaaS
   end
 
   def get_vmtemplate(args)
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('VMTemplate')))
   end
 
-  def get_all_vmtemplates(args)
+  def get_all_vmtemplates
+    get_all(:vmtemplate, args)
   end
 
   def list_vmtemplates
     json_to_hash(get(:uri    => '/vmtemplates',
-                     :accept => cloud_type_with_common('VMTemplate')))
+                     :accept => cloud_type('VMTemplate')))
   end
 
   ####----
@@ -247,7 +255,7 @@ class CaaS
   ####---- version
   def get_version
     json_to_hash(get(:uri     => '/version',
-                     :accept  => cloud_type_with_common('Version'),
+                     :accept  => cloud_type('Version'),
                      :no_auth => true))
   end
 
