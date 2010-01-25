@@ -43,29 +43,29 @@ class CaaS
 
   ####---- session
   def login(uid, passwd)
-    @auth = json_to_hash(post(:url          => '/login',
+    @auth = json_to_hash(post(:uri          => '/login',
                               :body         => {:user_id=>uid,:password=>passwd},
-                              :accept       => cloud_type_with_common('Login'),
+                              :accept       => cloud_type('Login'),
                               :content_type => cloud_type('Login'),
                               :no_auth      => true))
   end
 
   def logout
-    post(:url    => '/logout',
+    post(:uri    => '/logout',
          :accept => cloud_type('common.Messages'))
   end
 
   ####---- accounts
   def create_account(args)
-    json_to_hash(post(:url          => '/accounts',
+    json_to_hash(post(:uri          => '/accounts',
                       :body         => args,
                       :accept       => cloud_type('common.Messages'),
                       :content_type => cloud_type('Account')))
   end
 
   def get_account(args)
-    json_to_hash(get(:url    => args[:uri],
-                     :accept => cloud_type_with_common('Account')))
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('Account')))
   end
 
   def get_all_accounts
@@ -74,8 +74,8 @@ class CaaS
 
   def list_accounts(args={})
     begin
-      json_to_hash(get(:url    => "/accounts",
-                       :accept => cloud_type_with_common('Account')))
+      json_to_hash(get(:uri    => "/accounts",
+                       :accept => cloud_type('Account')))
     rescue
      {}
     end
@@ -83,19 +83,19 @@ class CaaS
 
   ####----
   def update_account(args)
-    put(:url          => args.delete(:account)[:uri],
+    put(:uri          => args.delete(:account)[:account_uri],
         :body         => args,
-        :accept       => cloud_type_with_common('Account'),
+        :accept       => cloud_type('Account'),
         :content_type => cloud_type('Account'))
   end
 
   def delete_account(args)
-    put(:url          => args.delete(:account)[:uri],
-        :accept       => cloud_type('common.Messages'))
+    delete(:uri          => args.delete(:account)[:account_uri],
+           :accept       => cloud_type('common.Messages'))
   end
 
   def onboard(args)
-    json_to_hash(post(:url          => "#{args.delete(:account)[:uri]}/onboard",
+    json_to_hash(post(:uri          => "#{args.delete(:account)[:account_uri]}/onboard",
                       :body         => args,
                       :accept       => cloud_type('common.Messages'),
                       :content_type => cloud_type('Onboard')))
@@ -103,8 +103,8 @@ class CaaS
 
   ####---- clouds
   def get_cloud(args)
-    json_to_hash(get(:url    => args[:uri],
-                     :accept => cloud_type_with_common('Cloud')))
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('Cloud')))
   end
 
   def get_all_clouds
@@ -113,8 +113,8 @@ class CaaS
 
   def list_clouds(args={})
     begin
-      json_to_hash(get(:url    => auth[:clouds_uri],
-                       :accept => cloud_type_with_common('Cloud')))
+      json_to_hash(get(:uri    => auth[:clouds_uri],
+                       :accept => cloud_type('Cloud')))
     rescue
       {}
     end
@@ -122,8 +122,8 @@ class CaaS
 
   ####---- vdc
   def get_vdc(args)
-    json_to_hash(get(:url    => args[:uri],
-                     :accept => cloud_type_with_common('VDC')))
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('VDC')))
   end
 
   def get_all_vdcs(args)
@@ -131,14 +131,14 @@ class CaaS
   end
 
   def list_vdcs
-    json_to_hash(get(:url    => "#{args[:parent][:uri]}/vdcs",
-                     :accept => cloud_type_with_common('VDC')))
+    json_to_hash(get(:uri    => "#{args[:parent][:cloud_uri]}/vdcs",
+                     :accept => cloud_type('VDC')))
   end
 
   ####---- cluster
   def get_cluster(args)
-    json_to_hash(get(:url    => args[:uri],
-                     :accept => cloud_type_with_common('Cluster')))
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('Cluster')))
   end
 
   def get_all_clusters(args)
@@ -146,14 +146,14 @@ class CaaS
   end
 
   def list_clusters(args)
-    json_to_hash(get(:url    => "#{args[:parent][:uri]}/clusters",
-                     :accept => cloud_type_with_common('Cluster')))
+    json_to_hash(get(:uri    => "#{args[:parent][:vdc_uri]}/clusters",
+                     :accept => cloud_type('Cluster')))
   end
 
   ####---- vnet
   def get_vnet(args)
-    json_to_hash(get(:url    => args[:uri],
-                     :accept => cloud_type_with_common('Vnet')))
+    json_to_hash(get(:uri    => args[:uri],
+                     :accept => cloud_type('Vnet')))
   end
 
   def get_all_vnets(args)
@@ -161,14 +161,14 @@ class CaaS
   end
 
   def list_vnets(args)
-    json_to_hash(get(:url    => "#{args[:parent][:uri]}/vnets",
-                     :accept => cloud_type_with_common('Vnet')))
+    json_to_hash(get(:uri    => "#{args[:parent][:cluster_uri]}/vnets",
+                     :accept => cloud_type('Vnet')))
   end
 
   ####---- volume
   def get_volume(args)
-    json_to_hash(get(:url    => "#{args[:parent][:uri]}/volumes/#{args[:id]}",
-                     :accept => cloud_type_with_common('Volume')))
+    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/volumes/#{args[:vdc_id]}",
+                     :accept => cloud_type('Volume')))
   end
 
   def get_all_volumes(args)
@@ -176,8 +176,8 @@ class CaaS
   end
 
   def list_volumes(args)
-    json_to_hash(get(:url    => "#{args[:parent][:uri]}/volumes",
-                     :accept => cloud_type_with_common('Volume')))
+    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/volumes",
+                     :accept => cloud_type('Volume')))
   end
 
   ####---- vms
@@ -215,7 +215,7 @@ class CaaS
   end
 
   def list_locations
-    json_to_hash(get(:url    => '/locations',
+    json_to_hash(get(:uri    => '/locations',
                      :accept => cloud_type_with_common('Location')))
   end
 
@@ -237,7 +237,7 @@ class CaaS
   end
 
   def list_vmtemplates
-    json_to_hash(get(:url    => '/vmtemplates',
+    json_to_hash(get(:uri    => '/vmtemplates',
                      :accept => cloud_type_with_common('VMTemplate')))
   end
 
@@ -250,7 +250,7 @@ class CaaS
 
   ####---- version
   def get_version
-    json_to_hash(get(:url     => '/version',
+    json_to_hash(get(:uri     => '/version',
                      :accept  => cloud_type_with_common('Version'),
                      :no_auth => true))
   end
@@ -270,15 +270,11 @@ class CaaS
   end
 
   def json_to_hash(json)
-    symbolize_keys(JSON.parse(json))
+    json.empty? ? nil : symbolize_keys(JSON.parse(json))
   end
 
   def to_json(hash)
     hash.to_json.gsub(/\\\//,'/')
-  end
-
-  def cloud_type_with_common(type)
-    cloud_type(type) + ',' + cloud_type('common.Messages')
   end
 
   def cloud_type(type)
@@ -295,21 +291,21 @@ class CaaS
                                             :x_cloud_specification_version=>'0.1')
     headers.update(:content_type=>args[:content_type]) unless args[:content_type].nil?
     headers.update(:authentication=>'BASIC '+auth[:authentication]) unless args[:no_auth]
-    RestClient.post CaaS.site+args[:url], to_json(body), headers
+    RestClient.post CaaS.site+args[:uri], to_json(body), headers
   end
 
   def get(args)
     headers = (args[:headers] || {}).update(:accept=>args[:accept],
                                             :x_cloud_specification_version=>'0.1')
     headers.update(:authentication=>'BASIC '+auth[:authentication]) unless args[:no_auth]
-    RestClient.get CaaS.site+args[:url], headers
+    RestClient.get CaaS.site+args[:uri], headers
   end
 
   def delete(args)
     headers = (args[:headers] || {}).update(:accept=>args[:accept],
                                             :x_cloud_specification_version=>'0.1',
                                             :authentication=>'BASIC '+auth[:authentication])
-    RestClient.delete CaaS.site+args[:url], headers
+    RestClient.delete CaaS.site+args[:uri], headers
   end
 
   def put(args)
@@ -318,7 +314,7 @@ class CaaS
                                             :x_cloud_specification_version=>'0.1',
                                             :authentication=>'BASIC '+auth[:authentication])
     headers.update(:content_type=>args[:content_type]) unless args[:content_type].nil?
-    RestClient.put CaaS.site+args[:url], to_json(body), headers
+    RestClient.put CaaS.site+args[:uri], to_json(body), headers
   end
 
 
