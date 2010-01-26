@@ -4,13 +4,38 @@ require 'json'
 
 ####----------------------------------------------------------------------------------------------------
 ####----------------------------------------------------------------------------------------------------
-class CaaSResult
+class CaaSObject
+  @children = {:account=>[], :location=>[], :vmtemplate=>[], :cloud=>[:vdc], :vdc=>[:cluster, :volume],
+               :cluster=>[:vm, :vnet]}
+  @obj_meths = [:update, :delete, :control, :onboard]
+  class << self ;attr_reader :children, :obj_meths; end
+
   def initialize(session, attributes)
     @session, @attributes = session, attributes
   end
-  def method_messing(meth, *args, &blk)
-    @attributes.send(meth, *args, &blk)
+
+  def method_missing(meth, *args, &blk)
+    if @attributes.include?(meth)
+      @attributes[meth]
+    elsif is_child_meth?(meth)
+      @session.send(meth, (args.first || {}).merge(:parent=>self))
+    elsif self.class.obj_meths.include?(meth)
+      @session.send("#{meth}_#{obj_type}".to_sym, self, *args)
+    else
+      @attributes.send(meth, *args, &blk)
+    end
   end
+
+  def obj_type
+    /.*\/(.*)\/\d*$/.match(@attributes[:uri]).captures.first.gsub(/s$/,'')
+  end
+
+  def is_child_meth?(child_meth)
+    self.class.children[obj_type.to_sym].include?(child_meth.to_s.split('_').last.gsub(/s$/,'').to_sym)
+  end
+
+  private :obj_type, :is_child_meth?
+
 end
 
 
@@ -28,7 +53,7 @@ class CaaS
     def user(uid, password)
       ses = new
       ses.login(uid, password)
-      ses.get_user_ancestors; ses
+      ses.get_user_objects; ses
     end
 
     def admin(uid, password)
@@ -57,15 +82,17 @@ class CaaS
 
   ####---- accounts
   def create_account(args)
-    json_to_hash(post(:uri          => '/accounts',
-                      :body         => args,
-                      :accept       => cloud_type('common.Messages'),
-                      :content_type => cloud_type('Account')))
+    acct = json_to_hash(post(:uri          => '/accounts',
+                             :body         => args,
+                             :accept       => cloud_type('common.Messages'),
+                             :content_type => cloud_type('Account')))
+    CaaSObject.new(self, acct)
   end
 
   def get_account(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('Account')))
+    acct = json_to_hash(get(:uri    => args[:uri],
+                            :accept => cloud_type('Account')))
+    CaaSObject.new(self, acct.update(:uri=>acct.delete(:account_uri)))
   end
 
   def get_all_accounts
@@ -82,31 +109,32 @@ class CaaS
   end
 
   ####----
-  def update_account(args)
-    put(:uri          => args.delete(:account)[:account_uri],
-        :body         => args,
-        :accept       => cloud_type('Account'),
-        :content_type => cloud_type('Account'))
+  def update_account(acct, *args)
+    uacct = json_to_hash(put(:uri          => acct[:uri],
+                             :body         => acct.merge!(*args),
+                             :accept       => cloud_type('Account'),
+                             :content_type => cloud_type('Account')))
+    acct.merge!(uacct)
   end
 
-  def delete_account(args)
-    delete(:uri          => args.delete(:account)[:account_uri],
-           :accept       => cloud_type('common.Messages'))
+  def delete_account(acct, *args)
+     json_to_hash(delete(:uri          => acct[:uri],
+                         :accept       => cloud_type('common.Messages')))
   end
 
-  def onboard(args)
-    vmtemplates_uri = args[:vmtemplates][:vmtemplates_uri] || '/vmtemplates'
-    json_to_hash(post(:uri          => "#{args[:account][:account_uri]}/onboard",
-                      :body         => {:location_uri=> "#{args[:location][:location_uri]}/",
-                                        :vmtemplates_uri => vmtemplates_uri},
+  def onboard_account(acct, *args)
+    json_to_hash(post(:uri          => "#{acct[:uri]}/onboard",
+                      :body         => {:location_uri=> "#{args.first[:location][:uri]}",
+                                        :vmtemplates_uri => '/vmtemplates'},
                       :accept       => cloud_type('common.Messages'),
                       :content_type => cloud_type('Onboard')))
   end
 
   ####---- clouds
   def get_cloud(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('Cloud')))
+    cloud = json_to_hash(get(:uri    => args[:uri],
+                             :accept => cloud_type('Cloud')))
+    CaaSObject.new(self, cloud.update(:uri=>cloud.delete(:cloud_uri)))
   end
 
   def get_all_clouds
@@ -124,23 +152,25 @@ class CaaS
 
   ####---- vdc
   def get_vdc(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('VDC')))
+    vdc = json_to_hash(get(:uri    => args[:uri],
+                           :accept => cloud_type('VDC')))
+    CaaSObject.new(self, vdc)
   end
 
   def get_all_vdcs(args)
     get_all(:vdc, args)
   end
 
-  def list_vdcs
-    json_to_hash(get(:uri    => "#{args[:parent][:cloud_uri]}/vdcs",
+  def list_vdcs(args)
+    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/vdcs",
                      :accept => cloud_type('VDC')))
   end
 
   ####---- cluster
   def get_cluster(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('Cluster')))
+    cluster = json_to_hash(get(:uri    => args[:uri],
+                               :accept => cloud_type('Cluster')))
+    CaaSObject.new(cluster)
   end
 
   def get_all_clusters(args)
@@ -148,7 +178,7 @@ class CaaS
   end
 
   def list_clusters(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:vdc_uri]}/clusters",
+    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/clusters",
                      :accept => cloud_type('Cluster')))
   end
 
@@ -163,7 +193,7 @@ class CaaS
   end
 
   def list_vnets(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:cluster_uri]}/vnets",
+    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/vnets",
                      :accept => cloud_type('Vnet')))
   end
 
@@ -211,8 +241,9 @@ class CaaS
   end
 
   def get_location(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('Location')))
+    loc = json_to_hash(get(:uri    => args[:uri],
+                           :accept => cloud_type('Location')))
+    CaaSObject.new(self, loc)
   end
 
   def get_all_locations
@@ -258,16 +289,17 @@ class CaaS
 
   ####---- version
   def get_version
-    json_to_hash(get(:uri     => '/version',
-                     :accept  => cloud_type('Version'),
-                     :no_auth => true))
+    ver = json_to_hash(get(:uri     => '/version',
+                           :accept  => cloud_type('Version'),
+                           :no_auth => true))
+    CaaSObject.new(self, ver)
   end
 
   ####---- utils
-  def get_user_ancestors
+  def get_user_objects
   end
 
-  def get_all(obj, args={})
+  def get_all(obj, args)
     send(('list_'+obj.to_s+'s').to_sym, args).map{|(u,o)| {:uri=>u}}.inject([]) do |l,o|
       begin
         l << send(('get_'+obj), o)
@@ -294,6 +326,7 @@ class CaaS
   end
 
   def post(args)
+
     body = args[:body] || {}
     headers = (args[:headers] || {}).update(:accept=>args[:accept],
                                             :x_cloud_specification_version=>'0.1')
