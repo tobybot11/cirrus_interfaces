@@ -1,3 +1,7 @@
+require 'rubygems'
+require 'rest_client'
+require 'json'
+
 ####----------------------------------------------------------------------------------------------------
 ####----------------------------------------------------------------------------------------------------
 class CaaSResult
@@ -212,10 +216,10 @@ class CaaS
   end
 
   def get_all_locations
-    get_all(:location, args)
+    get_all(:location)
   end
 
-  def list_locations
+  def list_locations(args={})
     json_to_hash(get(:uri    => '/locations',
                      :accept => cloud_type('Location')))
   end
@@ -237,10 +241,10 @@ class CaaS
   end
 
   def get_all_vmtemplates
-    get_all(:vmtemplate, args)
+    get_all(:vmtemplate)
   end
 
-  def list_vmtemplates
+  def list_vmtemplates(args={})
     json_to_hash(get(:uri    => '/vmtemplates',
                      :accept => cloud_type('VMTemplate')))
   end
