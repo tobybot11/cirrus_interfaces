@@ -7,34 +7,62 @@ require 'json'
 class CaaSObject
   @children = {:account=>[], :location=>[], :vmtemplate=>[], :cloud=>[:vdc], :vdc=>[:cluster, :volume],
                :cluster=>[:vm, :vnet]}
-  @obj_meths = [:update, :delete, :control, :onboard]
+  @obj_meths = [:update, :delete, :onboard]
   class << self ;attr_reader :children, :obj_meths; end
 
-  def initialize(session, attributes)
-    @session, @attributes = session, attributes
+  attr_reader :ses, :attr
+
+  def initialize(ses, attr)
+    @ses, @attr = ses, attr
   end
 
   def method_missing(meth, *args, &blk)
-    if @attributes.include?(meth)
-      @attributes[meth]
+    if attr.include?(meth)
+      attr[meth]
     elsif is_child_meth?(meth)
-      @session.send(meth, (args.first || {}).merge(:parent=>self))
-    elsif self.class.obj_meths.include?(meth)
-      @session.send("#{meth}_#{obj_type}".to_sym, self, *args)
+      if /^get_all/.match(meth.to_s)
+        ses.send(meth, self)
+      elsif /^get/.match(meth.to_s)
+        ses.send(meth, args.first)
+      else
+        ses.send(meth, (args.first || {}).merge(:parent=>self))
+      end
+    elsif self.class.obj_meths.include?(meth) and not obj_type.eql(:unknown)
+      ses.send("#{meth}_#{obj_type}".to_sym, self, *args)
+    elsif has_controller? and controls.include?(meth)
+      ses.send("control_#{obj_type}".to_sym, self, meth, *args)
     else
-      @attributes.send(meth, *args, &blk)
+      attr.send(meth, *args, &blk)
     end
   end
 
+  def merge!(obj)
+    if obj.kind_of?(Hash)
+      attr.merge!(obj)
+    else
+      attr.merge!(obj.attr)
+    end; self
+  end
+
+  def to_hash; attr; end
+  def attributes; attr.keys; end
+
+  def has_controller?; not attr[:controllers].nil?; end
+  def controls; attr[:controllers].inject([]){|r,(k,v)| r << v.to_sym};  end
+
   def obj_type
-    /.*\/(.*)\/\d*$/.match(@attributes[:uri]).captures.first.gsub(/s$/,'')
+    if attr[:uri]
+      /.*\/(.*)\/\d*$/.match(attr[:uri]).captures.first.gsub(/s$/,'')
+    else; :unknown; end
   end
 
   def is_child_meth?(child_meth)
-    self.class.children[obj_type.to_sym].include?(child_meth.to_s.split('_').last.gsub(/s$/,'').to_sym)
+    if self.class.children[obj_type.to_sym]
+      self.class.children[obj_type.to_sym].include?(child_meth.to_s.split('_').last.gsub(/s$/,'').to_sym)
+    else; false; end
   end
 
-  private :obj_type, :is_child_meth?
+  private :obj_type, :is_child_meth?, :has_controller?, :controls
 
 end
 
@@ -82,18 +110,17 @@ class CaaS
 
   ####---- accounts
   def create_account(args)
-    acct = json_to_hash(post(:uri          => '/accounts',
-                             :body         => args,
-                             :accept       => cloud_type('common.Messages'),
-                             :content_type => cloud_type('Account')))
-    CaaSObject.new(self, acct)
+     to_caas_object(json_to_hash(post(:uri          => '/accounts',
+                                      :body         => args,
+                                      :accept       => cloud_type('common.Messages'),
+                                      :content_type => cloud_type('Account'))))
   end
 
-  def get_account(args)
-    acct = json_to_hash(get(:uri    => args[:uri],
+  def get_account(uri)
+    acct = json_to_hash(get(:uri    => uri,
                             :accept => cloud_type('Account')))
-    CaaSObject.new(self, acct.update(:uri=>acct.delete(:account_uri)))
-  end
+    to_caas_object(acct.update(:uri=>acct.delete(:account_uri)))
+   end
 
   def get_all_accounts
     get_all(:account)
@@ -110,10 +137,10 @@ class CaaS
 
   ####----
   def update_account(acct, *args)
-    uacct = json_to_hash(put(:uri          => acct[:uri],
-                             :body         => acct.merge!(*args),
-                             :accept       => cloud_type('Account'),
-                             :content_type => cloud_type('Account')))
+    uacct = to_caas_object(json_to_hash(put(:uri          => acct[:uri],
+                                            :body         => acct.merge!(*args),
+                                            :accept       => cloud_type('Account'),
+                                            :content_type => cloud_type('Account'))))
     acct.merge!(uacct)
   end
 
@@ -131,10 +158,10 @@ class CaaS
   end
 
   ####---- clouds
-  def get_cloud(args)
-    cloud = json_to_hash(get(:uri    => args[:uri],
+  def get_cloud(uri)
+    cloud = json_to_hash(get(:uri    => uri,
                              :accept => cloud_type('Cloud')))
-    CaaSObject.new(self, cloud.update(:uri=>cloud.delete(:cloud_uri)))
+    to_caas_object(cloud.update(:uri=>cloud.delete(:cloud_uri)))
   end
 
   def get_all_clouds
@@ -151,10 +178,9 @@ class CaaS
   end
 
   ####---- vdc
-  def get_vdc(args)
-    vdc = json_to_hash(get(:uri    => args[:uri],
-                           :accept => cloud_type('VDC')))
-    CaaSObject.new(self, vdc)
+  def get_vdc(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('VDC'))))
   end
 
   def get_all_vdcs(args)
@@ -162,15 +188,14 @@ class CaaS
   end
 
   def list_vdcs(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/vdcs",
+    json_to_hash(get(:uri    => "#{args[:uri]}/vdcs",
                      :accept => cloud_type('VDC')))
   end
 
   ####---- cluster
-  def get_cluster(args)
-    cluster = json_to_hash(get(:uri    => args[:uri],
-                               :accept => cloud_type('Cluster')))
-    CaaSObject.new(cluster)
+  def get_cluster(uri)
+     to_caas_object(json_to_hash(get(:uri    => uri,
+                                     :accept => cloud_type('Cluster'))))
   end
 
   def get_all_clusters(args)
@@ -178,14 +203,22 @@ class CaaS
   end
 
   def list_clusters(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/clusters",
+    json_to_hash(get(:uri    => "#{args[:uri]}/clusters",
                      :accept => cloud_type('Cluster')))
   end
 
+  ####----
+  def control_cluster(cluster, control, *args)
+     to_caas_object(json_to_hash(post(:uri          => get_control_uri(cluster, control),
+                                      :body         => args.first,
+                                      :accept       => cloud_type('common.Messages'),
+                                      :content_type => cloud_type('Cluster'))))
+  end
+
   ####---- vnet
-  def get_vnet(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('Vnet')))
+  def get_vnet(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('Vnet'))))
   end
 
   def get_all_vnets(args)
@@ -193,14 +226,14 @@ class CaaS
   end
 
   def list_vnets(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/vnets",
+    json_to_hash(get(:uri    => "#{args[:uri]}/vnets",
                      :accept => cloud_type('Vnet')))
   end
 
   ####---- volume
-  def get_volume(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/volumes/#{args[:vdc_id]}",
-                     :accept => cloud_type('Volume')))
+  def get_volume(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('Volume'))))
   end
 
   def get_all_volumes(args)
@@ -208,7 +241,7 @@ class CaaS
   end
 
   def list_volumes(args)
-    json_to_hash(get(:uri    => "#{args[:parent][:uri]}/volumes",
+    json_to_hash(get(:uri    => "#{args[:uri]}/volumes",
                      :accept => cloud_type('Volume')))
   end
 
@@ -216,7 +249,9 @@ class CaaS
   def create_vm(args)
   end
 
-  def get_vm(args)
+  def get_vm(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('Vm'))))
   end
 
   def get_all_vms(args)
@@ -224,26 +259,27 @@ class CaaS
   end
 
   def list_vms(args)
+    json_to_hash(get(:uri    => "#{args[:uri]}/vms",
+                     :accept => cloud_type('Vm')))
   end
 
   ####----
-  def update_vm(args)
+  def update_vm(vm, *args)
   end
 
-  def delete_vm(args)
+  def delete_vm(vm, *args)
   end
 
-  def control_vm(args)
+  def control_vm(vm, control, *args)
   end
 
   ####---- locations
   def create_location(args)
   end
 
-  def get_location(args)
-    loc = json_to_hash(get(:uri    => args[:uri],
-                           :accept => cloud_type('Location')))
-    CaaSObject.new(self, loc)
+  def get_location(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('Location'))))
   end
 
   def get_all_locations
@@ -266,9 +302,9 @@ class CaaS
   def create_vmtemplate(args)
   end
 
-  def get_vmtemplate(args)
-    json_to_hash(get(:uri    => args[:uri],
-                     :accept => cloud_type('VMTemplate')))
+  def get_vmtemplate(uri)
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('VMTemplate'))))
   end
 
   def get_all_vmtemplates
@@ -299,8 +335,20 @@ class CaaS
   def get_user_objects
   end
 
-  def get_all(obj, args)
-    send(('list_'+obj.to_s+'s').to_sym, args).map{|(u,o)| {:uri=>u}}.inject([]) do |l,o|
+  def get_control_uri(obj, control)
+    obj[:controllers].map{|(k,v)| k.to_s}.select{|c| c.include?(control)}.first
+  end
+
+  def to_caas_object(obj)
+    if obj.kind_of?(Hash) and obj[:uri]
+      obj.inject(CaaSObject.new(self,{})){|r,(k,v)| r.merge!({k=>to_caas_object(v)})}
+    elsif obj.kind_of?(Array)
+      obj.map{|o| to_caas_object(o)}
+    else; obj; end
+  end
+
+  def get_all(obj, args={})
+    send(('list_'+obj.to_s+'s').to_sym, args).map{|(u,o)| u.to_s}.inject([]) do |l,o|
       begin
         l << send(('get_'+obj), o)
       rescue
@@ -321,8 +369,12 @@ class CaaS
     "application/vnd.com.sun.cloud.#{type}+json"
   end
 
-  def symbolize_keys(hash)
-    hash.inject({}){|r,(k,v)| r.update(k.to_sym=>(v.kind_of?(Hash) ? symbolize_keys(v) : v))}
+  def symbolize_keys(obj)
+    if obj.kind_of?(Hash)
+      obj.inject({}){|r,(k,v)| r.update(k.to_sym=>symbolize_keys(v))}
+    elsif obj.kind_of?(Array)
+      obj.map{|o| symbolize_keys(o)}
+    else; obj; end
   end
 
   def post(args)
