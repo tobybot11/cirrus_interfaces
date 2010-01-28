@@ -21,7 +21,7 @@ class CaaSObject
       attr[meth]
     elsif is_child_meth?(meth)
       if /^get_all/.match(meth.to_s)
-        ses.send(meth, self)
+        ses.send(meth, (args.first || {}).merge(:parent=>self))
       elsif /^get/.match(meth.to_s)
         ses.send(meth, args.first)
       else
@@ -48,7 +48,7 @@ class CaaSObject
   def attributes; attr.keys; end
 
   def has_controller?; not attr[:controllers].nil?; end
-  def controls; attr[:controllers].inject([]){|r,(k,v)| r << v.to_sym};  end
+  def controls; attr[:controllers].keys;  end
 
   def obj_type
     if attr[:uri]
@@ -92,7 +92,7 @@ class CaaS
   end
 
   ####--------------------------------------------------------------------------------------------------
-  attr_reader :auth, :user_ancestors
+  attr_reader :auth, :user_objects
 
   ####---- session
   def login(uid, passwd)
@@ -177,6 +177,10 @@ class CaaS
     end
   end
 
+  def user_cloud
+    user_objects[:cloud]
+  end
+
   ####---- vdc
   def get_vdc(uri)
     to_caas_object(json_to_hash(get(:uri    => uri,
@@ -188,7 +192,7 @@ class CaaS
   end
 
   def list_vdcs(args)
-    json_to_hash(get(:uri    => "#{args[:uri]}/vdcs",
+    json_to_hash(get(:uri    => "#{args[:parent].uri}/vdcs",
                      :accept => cloud_type('VDC')))
   end
 
@@ -203,16 +207,19 @@ class CaaS
   end
 
   def list_clusters(args)
-    json_to_hash(get(:uri    => "#{args[:uri]}/clusters",
+    json_to_hash(get(:uri    => "#{args[:parent].uri}/clusters",
                      :accept => cloud_type('Cluster')))
   end
 
+  def user_vdc
+    user_objects[:vdc]  end
+
   ####----
   def control_cluster(cluster, control, *args)
-     to_caas_object(json_to_hash(post(:uri          => get_control_uri(cluster, control),
-                                      :body         => args.first,
-                                      :accept       => cloud_type('common.Messages'),
-                                      :content_type => cloud_type('Cluster'))))
+     json_to_hash(post(:uri          => cluster.controllers[control],
+                       :body         => args.first,
+                       :accept       => cloud_type('common.Messages'),
+                       :content_type => cloud_type('Cluster')))
   end
 
   ####---- vnet
@@ -226,8 +233,12 @@ class CaaS
   end
 
   def list_vnets(args)
-    json_to_hash(get(:uri    => "#{args[:uri]}/vnets",
+    json_to_hash(get(:uri    => "#{args[:parent].uri}/vnets",
                      :accept => cloud_type('Vnet')))
+  end
+
+  def user_vnets
+    user_objects[:cluster].vnets
   end
 
   ####---- volume
@@ -241,12 +252,30 @@ class CaaS
   end
 
   def list_volumes(args)
-    json_to_hash(get(:uri    => "#{args[:uri]}/volumes",
+    json_to_hash(get(:uri    => "#{args[:parent].uri}/volumes",
                      :accept => cloud_type('Volume')))
+  end
+
+  def user_volume
   end
 
   ####---- vms
   def create_vm(args)
+    unless args[:parent].nil?
+      validate([:name, :vmtemplate, :vnets, :parent], args)
+      args[:vmtemplate_uri] = if args[:vmtemplate].kind_of?(String)
+                                user_vmtemplates[args.delete(:vmtemplate)].uri
+                              else
+                                args.delete(:vmtemplate).uri
+                              end
+      post(:uri          => "#{args.delete(:parent).uri}/vms",
+           :body         => args,
+           :accept       => cloud_type('common.Messages'),
+           :content_type => cloud_type('Vm'))
+
+    else
+      create_vm(args.merge({:parent=>user_objects[:cluster], :vnets=>user_vnets.map{|v| v.uri}}))
+    end
   end
 
   def get_vm(uri)
@@ -254,23 +283,38 @@ class CaaS
                                     :accept => cloud_type('Vm'))))
   end
 
-  def get_all_vms(args)
+  def get_all_vms(args={})
     get_all(:vm, args)
   end
 
-  def list_vms(args)
-    json_to_hash(get(:uri    => "#{args[:uri]}/vms",
-                     :accept => cloud_type('Vm')))
+  def list_vms(args={})
+    unless args[:parent].nil?
+      json_to_hash(get(:uri    => "#{args[:parent].uri}/vms",
+                       :accept => cloud_type('Vm')))
+    else
+      list_vms(:parent=>user_objects[:cluster])
+    end
   end
 
   ####----
   def update_vm(vm, *args)
+    uvm = to_caas_object(json_to_hash(put(:uri          => vm[:uri],
+                                          :body         => acct.merge!(*args),
+                                          :accept       => cloud_type('Account'),
+                                          :content_type => cloud_type('Account'))))
+    vm.merge!(uvm)
   end
 
   def delete_vm(vm, *args)
+     json_to_hash(delete(:uri          => vm[:uri],
+                         :accept       => cloud_type('common.Messages')))
   end
 
   def control_vm(vm, control, *args)
+     json_to_hash(post(:uri          => vm.controllers[control],
+                       :body         => args.first,
+                       :accept       => cloud_type('common.Messages'),
+                       :content_type => cloud_type('Vm')))
   end
 
   ####---- locations
@@ -316,6 +360,10 @@ class CaaS
                      :accept => cloud_type('VMTemplate')))
   end
 
+  def user_vmtemplates
+    get_user_vmtemplates.keys
+  end
+
   ####----
   def update_vmtemplate(args)
   end
@@ -333,10 +381,19 @@ class CaaS
 
   ####---- utils
   def get_user_objects
+    @user_objects = {}
+    @user_objects[:cloud] = get_all_clouds.first
+    @user_objects[:vdc] = user_objects[:cloud].get_all_vdcs.first
+    @user_objects[:cluster] = user_objects[:vdc].get_all_clusters.first
   end
 
-  def get_control_uri(obj, control)
-    obj[:controllers].map{|(k,v)| k.to_s}.select{|c| c.include?(control)}.first
+  def user_vmtemplates
+    @user_vmtemplates ||= get_all_vmtemplates.inject({}){|r,t| r.merge!(t.name=>t)}
+  end
+
+  def validate(expect, given)
+    given_args = given.keys
+    expect.each{|e| raise ArgumentError.new("#{e} missing") unless given_args.include?(e)}
   end
 
   def to_caas_object(obj)
@@ -378,7 +435,6 @@ class CaaS
   end
 
   def post(args)
-
     body = args[:body] || {}
     headers = (args[:headers] || {}).update(:accept=>args[:accept],
                                             :x_cloud_specification_version=>'0.1')
