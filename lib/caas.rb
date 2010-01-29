@@ -196,6 +196,10 @@ class CaaS
                      :accept => cloud_type('VDC')))
   end
 
+  def user_vdc
+    user_objects[:vdc]
+  end
+
   ####---- cluster
   def get_cluster(uri)
      to_caas_object(json_to_hash(get(:uri    => uri,
@@ -211,8 +215,9 @@ class CaaS
                      :accept => cloud_type('Cluster')))
   end
 
-  def user_vdc
-    user_objects[:vdc]  end
+  def user_cluster
+    user_objects[:cluster]
+  end
 
   ####----
   def control_cluster(cluster, control, *args)
@@ -257,6 +262,7 @@ class CaaS
   end
 
   def user_volume
+    user_objects[:vdc].get_all_volumes.first
   end
 
   ####---- vms
