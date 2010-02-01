@@ -27,7 +27,7 @@ class CaaSObject
       else
         ses.send(meth, (args.first || {}).merge(:parent=>self))
       end
-    elsif self.class.obj_meths.include?(meth) and not obj_type.eql(:unknown)
+    elsif self.class.obj_meths.include?(meth) and not obj_type.eql?(:unknown)
       ses.send("#{meth}_#{obj_type}".to_sym, self, *args)
     elsif has_controller? and controls.include?(meth)
       ses.send("control_#{obj_type}".to_sym, self, meth, *args)
@@ -110,11 +110,12 @@ class CaaS
 
   ####---- accounts
   def create_account(args)
-     to_caas_object(json_to_hash(post(:uri          => '/accounts',
-                                      :body         => args,
-                                      :accept       => cloud_type('common.Messages'),
-                                      :content_type => cloud_type('Account'))))
-  end
+     res = post(:uri          => '/accounts',
+                :body         => args,
+                :accept       => cloud_type('common.Messages'),
+                :content_type => cloud_type('Account'))
+    retry_until_found{get_account(res.headers[:location].gsub(CaaS.site,''))}
+ end
 
   def get_account(uri)
     acct = json_to_hash(get(:uri    => uri,
@@ -270,15 +271,15 @@ class CaaS
     unless args[:parent].nil?
       validate([:name, :vmtemplate, :vnets, :parent], args)
       args[:vmtemplate_uri] = if args[:vmtemplate].kind_of?(String)
-                                user_vmtemplates[args.delete(:vmtemplate)].uri
+                                user_vmtemplate(args.delete(:vmtemplate)).uri
                               else
                                 args.delete(:vmtemplate).uri
                               end
-      post(:uri          => "#{args.delete(:parent).uri}/vms",
-           :body         => args,
-           :accept       => cloud_type('common.Messages'),
-           :content_type => cloud_type('Vm'))
-
+      res = post(:uri          => "#{args.delete(:parent).uri}/vms",
+                 :body         => args,
+                 :accept       => cloud_type('common.Messages'),
+                 :content_type => cloud_type('Vm'))
+      retry_until_found{get_vm(res.headers[:location].gsub(CaaS.site,''))}
     else
       create_vm(args.merge({:parent=>user_objects[:cluster], :vnets=>user_vnets.map{|v| v.uri}}))
     end
@@ -317,10 +318,11 @@ class CaaS
   end
 
   def control_vm(vm, control, *args)
-     json_to_hash(post(:uri          => vm.controllers[control],
-                       :body         => args.first,
-                       :accept       => cloud_type('common.Messages'),
-                       :content_type => cloud_type('Vm')))
+    post(:uri          => vm.controllers[control],
+         :body         => args.first,
+         :accept       => cloud_type('common.Messages'),
+         :content_type => cloud_type('Vm'))
+    get_vm(vm.uri)
   end
 
   ####---- locations
@@ -366,8 +368,9 @@ class CaaS
                      :accept => cloud_type('VMTemplate')))
   end
 
-  def user_vmtemplates
-    get_user_vmtemplates.keys
+  def user_vmtemplate(name)
+    tmp = get_all_vmtemplates.select{|t| t.name.eql?(name)}
+    tmp.empty? ? (raise ArgumentError.new("#{name} is invalid vmtemplate name"))  : tmp.first
   end
 
   ####----
@@ -391,10 +394,6 @@ class CaaS
     @user_objects[:cloud] = get_all_clouds.first
     @user_objects[:vdc] = user_objects[:cloud].get_all_vdcs.first
     @user_objects[:cluster] = user_objects[:vdc].get_all_clusters.first
-  end
-
-  def user_vmtemplates
-    @user_vmtemplates ||= get_all_vmtemplates.inject({}){|r,t| r.merge!(t.name=>t)}
   end
 
   def validate(expect, given)
@@ -438,6 +437,16 @@ class CaaS
     elsif obj.kind_of?(Array)
       obj.map{|o| symbolize_keys(o)}
     else; obj; end
+  end
+
+  def retry_until_found
+    begin
+      yield
+    rescue RestClient::ResourceNotFound
+puts "not found"
+      sleep(1)
+      retry
+    end
   end
 
   def post(args)
