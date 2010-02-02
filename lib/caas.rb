@@ -7,7 +7,7 @@ require 'json'
 class CaaSObject
   @children = {:account=>[], :location=>[], :vmtemplate=>[], :cloud=>[:vdc], :vdc=>[:cluster, :volume],
                :cluster=>[:vm, :vnet]}
-  @obj_meths = [:update, :delete, :onboard]
+  @obj_meths = [:update, :delete, :onboard, :reload]
   class << self ;attr_reader :children, :obj_meths; end
 
   attr_reader :ses, :attr
@@ -73,6 +73,7 @@ class CaaS
 
   ####--------------------------------------------------------------------------------------------------
   @site = 'https://compute.synaptic.att.com/CirrusServices/resources'
+  MAX_RETRIES = 120
 
   class << self
 
@@ -146,8 +147,10 @@ class CaaS
   end
 
   def delete_account(acct, *args)
-     json_to_hash(delete(:uri          => acct[:uri],
-                         :accept       => cloud_type('common.Messages')))
+    save_acct = get_account(acct[:uri])
+    delete(:uri          => acct[:uri],
+           :accept       => cloud_type('common.Messages'))
+    save_acct
   end
 
   def onboard_account(acct, *args)
@@ -222,10 +225,15 @@ class CaaS
 
   ####----
   def control_cluster(cluster, control, *args)
-     json_to_hash(post(:uri          => cluster.controllers[control],
-                       :body         => args.first,
-                       :accept       => cloud_type('common.Messages'),
-                       :content_type => cloud_type('Cluster')))
+    post(:uri          => cluster.controllers[control],
+         :body         => args.first,
+         :accept       => cloud_type('common.Messages'),
+         :content_type => cloud_type('Cluster'))
+    reload_cluster(cluster, *args)
+  end
+
+  def reload_cluster(cluster, *args)
+    cluster.merge!(get_cluster(cluster.uri))
   end
 
   ####---- vnet
@@ -313,8 +321,10 @@ class CaaS
   end
 
   def delete_vm(vm, *args)
-     json_to_hash(delete(:uri          => vm[:uri],
-                         :accept       => cloud_type('common.Messages')))
+    save_vm = get_vm(vm[:uri])
+    delete(:uri          => vm[:uri],
+           :accept       => cloud_type('common.Messages'))
+    save_vm
   end
 
   def control_vm(vm, control, *args)
@@ -322,7 +332,11 @@ class CaaS
          :body         => args.first,
          :accept       => cloud_type('common.Messages'),
          :content_type => cloud_type('Vm'))
-    get_vm(vm.uri)
+    reload_vm(vm, *args)
+  end
+
+  def reload_vm(vm, *args)
+    vm.merge!(get_vm(vm.uri))
   end
 
   ####---- locations
@@ -370,7 +384,7 @@ class CaaS
 
   def user_vmtemplate(name)
     tmp = get_all_vmtemplates.select{|t| t.name.eql?(name)}
-    tmp.empty? ? (raise ArgumentError.new("#{name} is invalid vmtemplate name"))  : tmp.first
+    tmp.empty? ? (raise ArgumentError, "#{name} is invalid vmtemplate name")  : tmp.first
   end
 
   ####----
@@ -398,7 +412,7 @@ class CaaS
 
   def validate(expect, given)
     given_args = given.keys
-    expect.each{|e| raise ArgumentError.new("#{e} missing") unless given_args.include?(e)}
+    expect.each{|e| (raise ArgumentError, "#{e} missing") unless given_args.include?(e)}
   end
 
   def to_caas_object(obj)
@@ -440,12 +454,13 @@ class CaaS
   end
 
   def retry_until_found
+    try_count = 0
     begin
+      try_count += 1
       yield
     rescue RestClient::ResourceNotFound
-puts "not found"
       sleep(1)
-      retry
+      try_count < CaaS::MAX_RETRIES ? retry : raise
     end
   end
 
