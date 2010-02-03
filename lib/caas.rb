@@ -95,6 +95,10 @@ class CaaS
   ####--------------------------------------------------------------------------------------------------
   attr_reader :auth, :user_objects
 
+  def initialize
+    @user_objects = {}
+  end
+
   ####---- session
   def login(uid, passwd)
     @auth = json_to_hash(post(:uri          => '/login',
@@ -147,10 +151,10 @@ class CaaS
   end
 
   def delete_account(acct, *args)
-    save_acct = get_account(acct[:uri])
+    acct.reload
     delete(:uri          => acct[:uri],
            :accept       => cloud_type('common.Messages'))
-    save_acct
+    acct
   end
 
   def onboard_account(acct, *args)
@@ -159,6 +163,10 @@ class CaaS
                                         :vmtemplates_uri => '/vmtemplates'},
                       :accept       => cloud_type('common.Messages'),
                       :content_type => cloud_type('Onboard')))
+  end
+
+  def reload_account(acct, *args)
+    acct.merge!(get_account(acct.uri))
   end
 
   ####---- clouds
@@ -181,7 +189,7 @@ class CaaS
     end
   end
 
-  def user_cloud
+  def cloud
     user_objects[:cloud]
   end
 
@@ -200,7 +208,7 @@ class CaaS
                      :accept => cloud_type('VDC')))
   end
 
-  def user_vdc
+  def vdc
     user_objects[:vdc]
   end
 
@@ -219,21 +227,21 @@ class CaaS
                      :accept => cloud_type('Cluster')))
   end
 
-  def user_cluster
+  def cluster
     user_objects[:cluster]
   end
 
   ####----
-  def control_cluster(cluster, control, *args)
-    post(:uri          => cluster.controllers[control],
+  def control_cluster(clus, control, *args)
+    post(:uri          => clus.controllers[control],
          :body         => args.first,
          :accept       => cloud_type('common.Messages'),
          :content_type => cloud_type('Cluster'))
-    reload_cluster(cluster, *args)
+    reload_cluster(clus, *args)
   end
 
-  def reload_cluster(cluster, *args)
-    cluster.merge!(get_cluster(cluster.uri))
+  def reload_cluster(clus, *args)
+    clus.merge!(get_cluster(clus.uri))
   end
 
   ####---- vnet
@@ -251,7 +259,7 @@ class CaaS
                      :accept => cloud_type('Vnet')))
   end
 
-  def user_vnets
+  def vnets
     user_objects[:cluster].vnets
   end
 
@@ -270,7 +278,7 @@ class CaaS
                      :accept => cloud_type('Volume')))
   end
 
-  def user_volume
+  def volume
     user_objects[:vdc].get_all_volumes.first
   end
 
@@ -279,7 +287,7 @@ class CaaS
     unless args[:parent].nil?
       validate([:name, :vmtemplate, :vnets, :parent], args)
       args[:vmtemplate_uri] = if args[:vmtemplate].kind_of?(String)
-                                user_vmtemplate(args.delete(:vmtemplate)).uri
+                                vmtemplate(args.delete(:vmtemplate)).uri
                               else
                                 args.delete(:vmtemplate).uri
                               end
@@ -289,7 +297,7 @@ class CaaS
                  :content_type => cloud_type('Vm'))
       retry_until_found{get_vm(res.headers[:location].gsub(CaaS.site,''))}
     else
-      create_vm(args.merge({:parent=>user_objects[:cluster], :vnets=>user_vnets.map{|v| v.uri}}))
+      create_vm(args.merge({:parent=>user_objects[:cluster], :vnets=>vnets.map{|v| v.uri}}))
     end
   end
 
@@ -321,10 +329,10 @@ class CaaS
   end
 
   def delete_vm(vm, *args)
-    save_vm = get_vm(vm[:uri])
+    vm.reload
     delete(:uri          => vm[:uri],
            :accept       => cloud_type('common.Messages'))
-    save_vm
+    vm
   end
 
   def control_vm(vm, control, *args)
@@ -382,7 +390,7 @@ class CaaS
                      :accept => cloud_type('VMTemplate')))
   end
 
-  def user_vmtemplate(name)
+  def vmtemplate(name)
     tmp = get_all_vmtemplates.select{|t| t.name.eql?(name)}
     tmp.empty? ? (raise ArgumentError, "#{name} is invalid vmtemplate name")  : tmp.first
   end
