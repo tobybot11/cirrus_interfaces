@@ -21,6 +21,13 @@ end
 
 require 'cucumber/rake/task'
  
-Cucumber::Rake::Task.new(:features) do |t|
-  t.cucumber_opts = "--format pretty"
+namespace :features do 
+  Cucumber::Rake::Task.new(:stdout) do |t|
+    t.cucumber_opts = "--format pretty"
+  end
+
+  Cucumber::Rake::Task.new(:html) do |t|
+    t.cucumber_opts = "--format html --out test.html"
+  end
+
 end
