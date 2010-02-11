@@ -3,8 +3,10 @@ Feature: Automating creation of onboard user object model
   As an onboard user
   I want an object hierarchy created so that I can create Virtual Machines.
 
-  Scenario: Onboard user cloud object exists
+  Background:
     Given an onboard user session
+
+  Scenario: Onboard user cloud object exists
     Then a cloud object shall exist with the following attributes
     | attribute   | value                |
     | uri         | /accounts/*/clouds/* |
@@ -13,7 +15,6 @@ Feature: Automating creation of onboard user object model
     | vdcs        | *                    |
 
    Scenario: Onboard user vdc object exists
-    Given an onboard user session
     Then a vdc object shall exist with the following attributes
     | attribute       | value                       |
     | uri             | /accounts/*/clouds/*/vdcs/* |
@@ -27,7 +28,6 @@ Feature: Automating creation of onboard user object model
     | volumes         | *                           |
    
    Scenario: Onboard user cluster object exists
-    Given an onboard user session
     Then a cluster object shall exist with the following attributes
     | attribute       | value                                  |
     | uri             | /accounts/*/clouds/*/vdcs/*/clusters/* |
@@ -37,3 +37,31 @@ Feature: Automating creation of onboard user object model
     | vnets           | *                                      |
     | vms             | *                                      |
     | controllers     | *                                      |
+
+   Scenario: Onboard user volume object exists
+    Then a volume object shall exist with the following attributes
+    | attribute       | value                                  |
+    | uri             | /accounts/*/clouds/*/vdcs/*/volumes/*  |
+    | vdc_uri         | /accounts/*/clouds/*/vdcs/*            |
+    | description     | *                                      |
+    | name            | *                                      |
+    | webdav          | nfs://172.16.45.2:/export/SUNNFSL9     |
+    | tags            | *                                      |
+
+   Scenario: Onboard user vnet objects exists
+    Then two vnets shall exist
+    And the first shall have the following attributes 
+    | attribute       | value                                  |
+    | uri             |   |
+    | cluster_uri     | /accounts/*/clouds/*/vdcs/*            |
+    | description     | *                                      |
+    | name            | *                                      |
+    | tags            | *                                      |
+    And the second shall have the following attributes
+    | attribute       | value                                  |
+    | uri             |   |
+    | cluster_uri     | /accounts/*/clouds/*/vdcs/*            |
+    | description     | *                                      |
+    | name            | *                                      |
+    | tags            | *                                      |
+ 

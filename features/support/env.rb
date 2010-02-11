@@ -15,17 +15,24 @@ module CaasHelpers
     File.open(File.join(Dir.pwd, 'features/support/credentials.yml')) {|yf| YAML::load(yf)}[role]
   end
 
+  def user; @user; end
+  def admin; @admin; end
+
 end
 
 World(CaasHelpers)
 
 ####------------------------------------------------------------------------------------------------------
-def_matcher :match_pattern do |receiver, matcher, args|
-  matcher.positive_msg = "Expected patern match between #{receiver} and '#{args.first}'"
-  matcher.negative_msg = "Expected no patern match between #{receiver} and '#{args.first}'"
-  unless args.first.eql?('*')
-    pat = args.first.gsub('*','')
-    url = receiver.gsub(/\d*/,'')
-    pat.eql?(url)
-  else;true;end
+def_matcher :have_value do |receiver, matcher, args|
+  matcher.positive_msg = "Expected match between #{receiver} and '#{args.first}'"
+  matcher.negative_msg = "Expected no match between #{receiver} and '#{args.first}'"
+  if /^user|^admin/.match(args.first)
+    receiver.eql?(eval(args.first))
+  elsif args.first.eql('*')
+    true
+  elsif args.first.inlude?('*')
+    args.first.gsub('*','').eql?(receiver.gsub(/\d*/,''))
+  else
+    args.first.eql?(receiver)
+  end
 end

@@ -5,6 +5,6 @@ end
 Then /^a valid CaaS "([^\"]*)" session can be created with the following attributes$/ do |role, table|
   ses = CaaS.send(role.to_sym, @credentials['uid'], @credentials['password'])
   table.hashes.each do |a|
-    ses.auth[a['attribute'].to_sym].should match_pattern(a['value'])
+    ses.auth[a['attribute'].to_sym].should have_value(a['value'])
   end
 end

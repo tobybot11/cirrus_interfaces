@@ -171,9 +171,8 @@ class CaaS
 
   ####---- clouds
   def get_cloud(uri)
-    cloud = json_to_hash(get(:uri    => uri,
-                             :accept => cloud_type('Cloud')))
-    to_caas_object(cloud.update(:uri=>cloud.delete(:cloud_uri)))
+     to_caas_object(json_to_hash(get(:uri    => uri,
+                                     :accept => cloud_type('Cloud'))))
   end
 
   def get_all_clouds
