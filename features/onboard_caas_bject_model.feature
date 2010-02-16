@@ -8,35 +8,35 @@ Feature: Automating creation of onboard user object model
 
   Scenario: Onboard user cloud object exists
     Then a cloud object shall exist with the following attributes
-    | attribute   | value                |
-    | uri         | /accounts/*/clouds/* |
-    | description | *                    |
-    | name        | *                    |
-    | vdcs        | *                    |
+    | attribute   | value                                             |
+    | uri         | /accounts/327/clouds/270                          |
+    | description | *                                                 |
+    | name        | *                                                 |
+    | vdcs        | {:"/accounts/327/clouds/270/vdcs/253"=>"vdc-253"} |
 
    Scenario: Onboard user vdc object exists
     Then a vdc object shall exist with the following attributes
-    | attribute       | value                       |
-    | uri             | /accounts/*/clouds/*/vdcs/* |
-    | vmtemplates_uri | /vmtemplates                |
-    | location_uri    | /locations/*                |
-    | description     | *                           |
-    | name            | *                           |
-    | vdcs            | *                           |
-    | tags            | *                           |
-    | root_cluster    | *                           |
-    | volumes         | *                           |
+    | attribute       | value                             |
+    | uri             | /accounts/327/clouds/270/vdcs/253 |
+    | vmtemplates_uri | /vmtemplates                      |
+    | location_uri    | /locations/8                      |
+    | description     | *                                 |
+    | name            | *                                 |
+    | vdcs            | *                                 |
+    | tags            | *                                 |
+    | root_cluster    | *                                 |
+    | volumes         | *                                 |
    
    Scenario: Onboard user cluster object exists
     Then a cluster object shall exist with the following attributes
-    | attribute       | value                                  |
-    | uri             | /accounts/*/clouds/*/vdcs/*/clusters/* |
-    | parent_uri      | /accounts/*/clouds/*/vdcs/*            |
-    | description     | *                                      |
-    | name            | *                                      |
-    | vnets           | *                                      |
-    | vms             | *                                      |
-    | controllers     | *                                      |
+    | attribute       | value                                          |
+    | uri             | /accounts/327/clouds/270/vdcs/253/clusters/244 |
+    | parent_uri      | /accounts/327/clouds/270/vdcs/253              |
+    | description     | *                                              |
+    | name            | *                                              |
+    | vnets           | *                                              |
+    | vms             | *                                              |
+    | controllers     | *                                              |
 
    Scenario: Onboard user volume object exists
     Then a volume object shall exist with the following attributes
