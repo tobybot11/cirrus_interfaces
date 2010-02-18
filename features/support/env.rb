@@ -21,6 +21,12 @@ module CaasHelpers
   def user; @user; end
   def admin; @admin; end
 
+  def validate_object(table, obj)
+    table.hashes.each do |a|
+      obj[a['attribute'].to_sym].should have_value(a['value'])
+    end
+  end
+
   def cmd(vm, cmd)
     cred, result = load_credentails('vm'), ''
     Net::SSH.start(vm.interfaces.first[:public_address],cred['uid'],:password=>cred['password']) do |ssh|
@@ -30,6 +36,16 @@ module CaasHelpers
 
   def vm_up?(vm)
     cmd(vm, 'id -nu').eql?(load_credentails('vm')['uid'])
+  end
+
+  def vm_down?(vm)
+    begin
+      cmd(vm, 'id -nu').eql?(load_credentails('vm')['uid'])
+    rescue Errno::ETIMEDOUT
+      true
+    else
+      false
+    end
   end
 
   def mount_volume(vm, vol)
@@ -66,7 +82,11 @@ def_matcher :have_value do |receiver, matcher, args|
   if /^user|^admin/.match(args.first)
     receiver.eql?(eval(args.first))
   elsif args.first.eql?('*')
-    true
+    if receiver.nil?
+      matcher.positive_msg = "Expected not nil"
+      matcher.negative_msg = "Expected nil"
+      false
+    else; true; end
   elsif args.first.include?('*')
     args.first.gsub('*','').eql?(receiver.gsub(/\d*/,''))
   else
