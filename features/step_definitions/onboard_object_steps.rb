@@ -30,35 +30,34 @@ end
 
 ####---- cluster
 Then /^a cluster object shall exist with the following attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  validate_object(table, user.cluster)
 end
 
 Then /^two controllers with URIs$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  user.cluster.controllers.length.should == 2
+  validate_object(table, user.cluster.controllers)
 end
 
 Then /^two vnets with URIs$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  user.cluster.vnets.length.should == 2
+  table.hashes.each do |a|
+    user.cluster.vnets[a['attribute'].to_i].uri.should == a['value']
+  end
 end
 
+####---- volume
 Then /^a volume object shall exist with the following attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  validate_object(table, user.volume)
 end
 
 Then /^two vnets shall exist$/ do
-  pending # express the regexp above with the code you wish you had
+  user.vnets.length == 2
 end
 
 Then /^the first vnet shall have the following attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  validate_object(table, user.vnets[0])
 end
 
 Then /^the second vnet shall have the following attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  validate_object(table, user.vnets[1])
 end

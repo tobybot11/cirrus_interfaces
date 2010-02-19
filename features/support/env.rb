@@ -23,7 +23,7 @@ module CaasHelpers
 
   def validate_object(table, obj)
     table.hashes.each do |a|
-      obj[a['attribute'].to_sym].should have_value(a['value'])
+      obj[(/[0-9]+/.match(attr = a['attribute']) ?  attr.to_i : attr.to_sym)].should have_value(a['value'])
     end
   end
 
@@ -77,9 +77,11 @@ World(CaasHelpers)
 
 ####------------------------------------------------------------------------------------------------------
 def_matcher :have_value do |receiver, matcher, args|
-  matcher.positive_msg = "Expected match between #{receiver} and '#{args.first}'"
-  matcher.negative_msg = "Expected no match between #{receiver} and '#{args.first}'"
+  matcher.positive_msg = "Expected '#{args.first}' but got '#{receiver}'"
+  matcher.negative_msg = "Expected '#{args.first}' not '#{receiver}'"
   if /^user|^admin/.match(args.first)
+    receiver.eql?(eval(args.first))
+  elsif /^\[|^\{/.match(args.first)
     receiver.eql?(eval(args.first))
   elsif args.first.eql?('*')
     if receiver.nil?

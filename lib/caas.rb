@@ -123,10 +123,9 @@ class CaaS
  end
 
   def get_account(uri)
-    acct = json_to_hash(get(:uri    => uri,
-                            :accept => cloud_type('Account')))
-    to_caas_object(acct.update(:uri=>acct.delete(:account_uri)))
-   end
+    to_caas_object(json_to_hash(get(:uri    => uri,
+                                    :accept => cloud_type('Account'))))
+  end
 
   def get_all_accounts
     get_all(:account)
