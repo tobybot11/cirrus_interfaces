@@ -1,0 +1,58 @@
+Feature: Managment of Virtual Machines
+  In order to manage Virtual Machines
+  As an authenticated user
+  I need to be able to create/update/delete Virtual Machines, manage run state of Virtual Machines and attach storage 
+  Volumes to Virtual Machines.
+
+  Background:
+    Given an authenticated onboard user session
+
+  Scenario: Create a Virtual Machine object and verify attributes
+    Given the following Virtual Machine Configuration
+     | attribute   | value                                                        |
+     | name        | Cuke VM                                                      |
+     | description | Cucumber test VM                                             |
+     | vmtemplate  | RHELSMALL                                                    |
+    Then instantiate a Virtual Machine which shall have the following attributes
+     | attribute         | value                                                        |
+     | name              | Cuke VM                                                      |
+     | uri               | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*         |
+     | description       | Cucumber test VM                                             |
+     | os                | Linux                                                        |
+     | updated           | true                                                         |
+     | last_boot         | *                                                            |
+     | run_state         | STARTED                                                      |
+     | memory            | 2048                                                         |
+     | temp_disk         | 10                                                           |
+     | boot_disk         | 10                                                           |
+     | data_disk         | 10                                                           |
+     | cpu               | 1800                                                         |
+     | attach_uri        | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*/attach  |
+     | backup_uri        | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*/back_up |
+     | detach_uri        | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*/detach  |
+     | cluster_uri       | /accounts/420/clouds/293/vdcs/276/clusters/267               |
+     | controllers       | *                                                            |
+     | from_template_uri | *                                                            |
+     | from_vm_uri       | *                                                            |
+     | params            | *                                                            |
+     | tags              | *                                                            |
+     | interfaces        | *                                                            |
+     | vnets             | *                                                            |
+    And two controllers with the following URIs 
+     | attribute       | value                                                          |
+     | stop            | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*/stop      |
+     | reboot          | /accounts/420/clouds/293/vdcs/276/clusters/267/vms/*/reboot    |
+    And two vnets with URIs
+     | attribute       | value                                                          |
+     | 0               | /accounts/420/clouds/293/vdcs/276/clusters/267/vnets/273       |
+     | 1               | /accounts/420/clouds/293/vdcs/276/clusters/267/vnets/274       |
+    And the following interface attributes
+     | attribute       | value                                                          |
+     | ip_address      | *                                                              |
+     | mac_address     | *                                                              |
+     | nic             | *                                                              |
+     | public_address  | *                                                              |
+     | vnet_uri        | /accounts/420/clouds/293/vdcs/276/clusters/267/vnets/273       |
+   
+  Scenario: Create a Small Redhat Linux Virtual Machine
+    Then

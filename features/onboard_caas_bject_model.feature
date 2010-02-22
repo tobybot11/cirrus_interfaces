@@ -4,7 +4,7 @@ Feature: Automating creation of onboard user object model
   I want an object hierarchy created so that I can create Virtual Machines.
 
   Background:
-    Given an onboard user session
+    Given an authenticated onboard user session
 
   Scenario: Onboard user cloud object exists
     Then a cloud object shall exist with the following attributes

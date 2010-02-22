@@ -1,0 +1,4 @@
+Feature: Virtual Machine physical location
+  In order to determine or specify the physical location of a virtual machine 
+  As an authenticated user
+  I need to be able to retrieve the supported physical locations.

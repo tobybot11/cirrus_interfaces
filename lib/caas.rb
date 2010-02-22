@@ -90,6 +90,14 @@ class CaaS
       ses.login(uid, password); ses
     end
 
+    ####---- version
+    def get_version
+      headers ={:accept=> 'application/vnd.com.sun.cloud.Version+json',
+        :x_cloud_specification_version=>'0.1'}
+      ver = RestClient.get CaaS.site+'/version', headers
+      CaaSObject.new(self, json_to_hash(ver))
+    end
+
   end
 
   ####--------------------------------------------------------------------------------------------------

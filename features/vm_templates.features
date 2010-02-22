@@ -1,0 +1,4 @@
+Feature: Supported Virtual Machine templates
+  In order to deterine the supported Virtual Machine Templates
+  As an authenticated user
+  I need to be able to retrieve all supported Virtual machine templates.
