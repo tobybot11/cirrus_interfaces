@@ -83,6 +83,8 @@ def_matcher :have_value do |receiver, matcher, args|
     receiver.eql?(eval(args.first))
   elsif /^\[|^\{/.match(args.first)
     receiver.eql?(eval(args.first))
+  elsif args.first.eql?('nil')
+    receiver.nil?
   elsif args.first.eql?('*')
     if receiver.nil?
       matcher.positive_msg = "Expected not nil"

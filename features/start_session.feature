@@ -15,9 +15,9 @@ Feature: Start CaaS Session
     Then a valid CaaS "user" session can be created with the following attributes
     | attribute       | value                 |
     | authentication  |   *                   |
-    | account_uri     | /accounts/420         |
-    | clouds_uri      | /accounts/420/clouds  |
+    | account_uri     | /accounts/443         |
+    | clouds_uri      | /accounts/443/clouds  |
     | locations_uri   | /locations            | 
     | vmtemplates_uri | /vmtemplates          |
-    | onboard_uri     | /accounts/420/onboard |
+    | onboard_uri     | /accounts/443/onboard |
 
