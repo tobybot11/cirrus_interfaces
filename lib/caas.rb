@@ -94,8 +94,19 @@ class CaaS
     def get_version
       headers ={:accept=> 'application/vnd.com.sun.cloud.Version+json',
         :x_cloud_specification_version=>'0.1'}
-      ver = RestClient.get CaaS.site+'/version', headers
-      CaaSObject.new(self, json_to_hash(ver))
+      json_to_hash(RestClient.get(CaaS.site+'/version', headers))
+    end
+
+    def json_to_hash(json)
+      json.empty? ? nil : symbolize_keys(JSON.parse(json))
+    end
+
+    def symbolize_keys(obj)
+      if obj.kind_of?(Hash)
+        obj.inject({}){|r,(k,v)| r.update(k.to_sym=>symbolize_keys(v))}
+      elsif obj.kind_of?(Array)
+        obj.map{|o| symbolize_keys(o)}
+      else; obj; end
     end
 
   end
@@ -410,10 +421,7 @@ class CaaS
 
   ####---- version
   def get_version
-    ver = json_to_hash(get(:uri     => '/version',
-                           :accept  => cloud_type('Version'),
-                           :no_auth => true))
-    CaaSObject.new(self, ver)
+    self.class.get_version
   end
 
   ####---- utils
@@ -448,7 +456,7 @@ class CaaS
   end
 
   def json_to_hash(json)
-    json.empty? ? nil : symbolize_keys(JSON.parse(json))
+    self.class.json_to_hash(json)
   end
 
   def to_json(hash)
@@ -460,11 +468,7 @@ class CaaS
   end
 
   def symbolize_keys(obj)
-    if obj.kind_of?(Hash)
-      obj.inject({}){|r,(k,v)| r.update(k.to_sym=>symbolize_keys(v))}
-    elsif obj.kind_of?(Array)
-      obj.map{|o| symbolize_keys(o)}
-    else; obj; end
+    self.class.symbolize_keys(obj)
   end
 
   def retry_until_found
