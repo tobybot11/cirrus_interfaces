@@ -1,4 +1,4 @@
-Given /^an onboard user session$/ do
+Given /^an authenticated onboard user session$/ do
   cred = load_credentials('user')
   @user = CaaS.user(cred['uid'], cred['password'])
 end
@@ -41,7 +41,7 @@ end
 Then /^two vnets with URIs$/ do |table|
   user.cluster.vnets.length.should == 2
   table.hashes.each do |a|
-    user.cluster.vnets[a['attribute'].to_i].uri.should == a['value']
+    user.cluster.vnets[a['index'].to_i].uri.should == a['value']
   end
 end
 

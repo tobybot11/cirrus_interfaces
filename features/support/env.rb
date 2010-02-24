@@ -94,6 +94,6 @@ def_matcher :have_value do |receiver, matcher, args|
   elsif args.first.include?('*')
     args.first.gsub('*','').eql?(receiver.gsub(/\d*/,''))
   else
-    args.first.eql?(receiver)
+    args.first.eql?(receiver.to_s)
   end
 end

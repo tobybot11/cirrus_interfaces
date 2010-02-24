@@ -10,7 +10,7 @@ Feature: Automating creation of onboard user object model
     Then a cloud object shall exist with the following attributes
      | attribute   | value                                                        |
      | uri         | /accounts/443/clouds/307                                     |
-     | description | Created by OnboardingService on 2010-02-17T17:59:53.59-05:00 |
+     | description | Created by OnboardingService on 2010-02-23T13:17:09.46-05:00 |
      | name        | cloud-307                                                    |
    And one vdc with URI
      | attribute   | value                                                        |
@@ -22,7 +22,7 @@ Feature: Automating creation of onboard user object model
      | uri             | /accounts/443/clouds/307/vdcs/290                            |
      | vmtemplates_uri | /vmtemplates                                                 |
      | location_uri    | /locations/8                                                 |
-     | description     | Created by OnboardingService on 2010-02-17T17:59:53.66-05:00 |
+     | description     | Created by OnboardingService on 2010-02-23T13:17:09.54-05:00 |
      | name            | vdc-290                                                      |
      | root_cluster    | *                                                            |
      | volumes         | *                                                            |
@@ -48,7 +48,7 @@ Feature: Automating creation of onboard user object model
      | stop            | /accounts/443/clouds/307/vdcs/290/clusters/281/stop      |
      | start           | /accounts/443/clouds/307/vdcs/290/clusters/281/start     |
     And two vnets with URIs   
-     | attribute       | value                                                    |
+     | index           | value                                                    |
      | 0               | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/301 |
      | 1               | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/302 |
 
@@ -57,9 +57,9 @@ Feature: Automating creation of onboard user object model
      | attribute       | value                                                        |
      | uri             | /accounts/443/clouds/307/vdcs/290/volumes/165                |
      | vdc_uri         | /accounts/443/clouds/307/vdcs/290                            |
-     | description     | Created by OnboardingService on 2010-02-17T17:59:54.94-05:00 |
+     | description     | Created by OnboardingService on 2010-02-23T13:17:10.95-05:00 |
      | name            | volume-165                                                   |
-     | webdav          | nfs://172.16.90.2:/export/SUNNFSL16                          |
+     | webdav          | nfs://172.16.40.2:/export/SUNNFSL6                          |
      | tags            | ["/accounts/443/clouds/307/vdcs/290/clusters/281/vnets/302"] |
 
    Scenario: Onboard user vnet objects exists
@@ -67,13 +67,13 @@ Feature: Automating creation of onboard user object model
     And the first vnet shall have the following attributes 
      | attribute       | value                                                        |
      | uri             | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/301     |
-     | description     | Created by OnboardingService on 2010-02-17T17:59:54.50-05:00 |
+     | description     | Created by OnboardingService on 2010-02-23T13:17:10.46-05:00 |
      | name            | vnet-281                                                     |
      | tags            | ["208"]                                                      |
     And the second vnet shall have the following attributes
      | attribute       | value                                                        |
      | uri             | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/302     |
-     | description     | Created by OnboardingService on2010-02-17T17:59:54.72-05:00  |
+     | description     | Created by OnboardingService on2010-02-23T13:17:10.70-05:00  |
      | name            | vnet-281                                                     |
      | tags            |  ["340"]                                                     |
  
