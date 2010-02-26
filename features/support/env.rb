@@ -12,18 +12,24 @@ World(Test::Unit::Assertions)
 ####------------------------------------------------------------------------------------------------------
 module CaasHelpers
 
-   MAX_RETRIES = 20
+  attr_reader :user, :admin, :vm, :params
+
+  MAX_RETRIES = 20
 
   def load_credentials(type)
     File.open(File.join(Dir.pwd, 'features/support/credentials.yml')) {|yf| YAML::load(yf)}[type]
   end
 
-  def user; @user; end
-  def admin; @admin; end
-
   def validate_object(table, obj)
     table.hashes.each do |a|
+p a['attribute']
       obj[(/[0-9]+/.match(attr = a['attribute']) ?  attr.to_i : attr.to_sym)].should have_value(a['value'])
+    end
+  end
+
+  def vm_create_attributes(table)
+    table.hashes.inject({}) do |h,a|
+      h.update(a['attribute'].to_sym => a['value'])
     end
   end
 
@@ -92,8 +98,26 @@ def_matcher :have_value do |receiver, matcher, args|
       false
     else; true; end
   elsif args.first.include?('*')
-    args.first.gsub('*','').eql?(receiver.gsub(/\d*/,''))
+    res_path = receiver.split('/')
+    exp_path = args.first.split('/')
+    exp_path.each_with_index do |v,i|
+      if v.eql?('*')
+        exp_path[i] = ''
+        res_path[i] = ''
+      end
+    end
+    exp_path.join('/').eql?(res_path.join('/'))
   else
     args.first.eql?(receiver.to_s)
   end
+end
+
+####---------------------------------------------------------------------------
+def_matcher :be_nil do |receiver, matcher, args|
+  receiver.nil?
+end
+
+####---------------------------------------------------------------------------
+def_matcher :be_empty? do |receiver, matcher, args|
+  receiver.empty?
 end
