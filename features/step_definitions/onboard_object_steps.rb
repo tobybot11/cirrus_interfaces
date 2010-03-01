@@ -1,5 +1,5 @@
 Given /^an authenticated onboard user session$/ do
-  cred = load_credentials('user')
+  cred = load_config('user')
   @user = CaaS.user(cred['uid'], cred['password'])
 end
 

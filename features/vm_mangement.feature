@@ -40,36 +40,51 @@ Feature: Managment of Virtual Machines
     And the following interface attributes
      | attribute       | value                                                          |
      | mac_address     | not_available                                                  |
-     | nic             | PCNet32 ethernet adapter on \"Internal\" network               |
+     | nic             | PCNet32 ethernet adapter on "Internal" network                 |
      | public_address  | *                                                              |
      | ip_address      | *                                                              |
-     | vnet_uri        | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/301       |
+     | vnet_uri        | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/*         |
     And delete the virtual machine
    
-  Scenario: Shutdown Virtual Machine
-    Given a Virtual Machine that has been verified running and is in run_state STARTED with attributes
-     | attribute   | value            |
-     | name        | Cuke Test VM     |
-     | description | Cucumber test VM |
-     | vmtemplate  | RHEL5-Small      |
-    Then the Virtual Machine shall have the following attributes with values 
-     | attribute         | value    |
-     | os                | RHEL5    |
-     | run_state         | STARTED  |
-     | memory            | 2048     |
-     | cpu               | 1800     |
-    And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
+  Scenario: Network access for running Virtual Machine
+    Given a Virtual Machine started with attributes
+     | attribute   | value             |
+     | name        | Cuke Test VM      |
+     | description | Cucumber test VM  |
+     | vmtemplate  | RHEL5-Small       |
+    And the following attributes after creation
+     | attribute   | value                               |
+     | run_state   | STARTED                             |
+    Then it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+
+  Scenario: Shutdown Virtual Machine
+    Given a Virtual Machine started with attributes
+     | attribute   | value             |
+     | name        | Cuke Test VM      |
+     | description | Cucumber test VM  |
+     | vmtemplate  | RHEL5-Small       |
+    And the following attributes after creation
+     | attribute   | value   |
+     | run_state   | STARTED |
+    Then when the Virtual Machine is sutdown it will have the following attributes
+     | attribute   | value   |
+     | run_state   | STOPPED |
     And there should be one available controller
      | index           | value                                                          |
      | start           | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/start     |
+    And it should not be possible to log into the Virtual Machine through its network interface on its "public_address"
+    And it should not be possible to log into the Virtual Machine through its network interface on its "ip_address"
 
   Scenario: Restart STOPPED Virtual Machine
-    Given a Virtual Machine that has been verified stopped and is in run_state STOPPED with attributes
-     | attribute   | value            |
-     | name        | Cuke Test VM     |
-     | description | Cucumber test VM |
-     | vmtemplate  | RHEL5-Small      |
+    Given a Virtual Machine started with attributes
+     | attribute   | value             |
+     | name        | Cuke Test VM      |
+     | description | Cucumber test VM  |
+     | vmtemplate  | RHEL5-Small       |
+    And and shutdown with the folloing attributes
+     | attribute   | value   |
+     | run_state   | STOPPED |
     Then if it is restarted it will have the following run_state
      | attribute  | value    |
      | run_state  | STARTED  |

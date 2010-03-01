@@ -1,0 +1,16 @@
+ admin:
+  uid: caasadm
+  password: ilikesun
+ user:
+  uid: troy.stribling@usi.net
+  password: att123
+ vm:
+  uid: root
+  password: Star$Win902
+ config:
+  vm_count: 15
+  test_private_ips: false
+
+
+
+

@@ -73,7 +73,7 @@ class CaaS
 
   ####--------------------------------------------------------------------------------------------------
   @site = 'https://compute.synaptic.att.com/CirrusServices/resources'
-  MAX_RETRIES = 300
+  MAX_RETRIES = 600
 
   class << self
 

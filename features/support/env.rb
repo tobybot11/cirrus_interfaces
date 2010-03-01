@@ -16,13 +16,12 @@ module CaasHelpers
 
   MAX_RETRIES = 20
 
-  def load_credentials(type)
-    File.open(File.join(Dir.pwd, 'features/support/credentials.yml')) {|yf| YAML::load(yf)}[type]
+  def load_config(type)
+    File.open(File.join(Dir.pwd, 'features/support/config.yml')) {|yf| YAML::load(yf)}[type]
   end
 
   def validate_object(table, obj)
     table.hashes.each do |a|
-p a['attribute']
       obj[(/[0-9]+/.match(attr = a['attribute']) ?  attr.to_i : attr.to_sym)].should have_value(a['value'])
     end
   end
@@ -77,6 +76,22 @@ p a['attribute']
     end
   end
 
+  def create_vms(count, args)
+    (1..count).map do |c|
+      Thread.new do
+        user.create_vm(:name=>args[:name]+"-#{c}", :description=>args[:description], :vmtemplate=>args[:vmtemplate])
+      end
+    end
+  end
+
+  def create_vm_from_table_data(table)
+    @params =  vm_create_attributes(table)
+    @vm = user.create_vm(:name=>params[:name], :description=>params[:description], :vmtemplate=>params[:vmtemplate])
+  end
+
+  def vms_with_names_matching(reg)
+    user.get_all_vms.select{|v| reg.match(v.name)}
+  end
 end
 
 World(CaasHelpers)
