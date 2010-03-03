@@ -1,5 +1,6 @@
 $:.unshift(File.join(Dir.pwd,'lib'))
 require 'rubygems'
+require 'net/ping'
 require 'net/ssh'
 require 'cirrus_interfaces'
 require 'shoulda'

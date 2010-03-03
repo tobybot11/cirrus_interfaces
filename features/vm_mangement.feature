@@ -7,7 +7,7 @@ Feature: Managment of Virtual Machines
   Background:
     Given an authenticated onboard user session
 
-  Scenario: Create and Delete a Virtual Machine object and verify attributes
+  Scenario: Create and Delete a Virtual Machine and verify attributes
     Given the following Virtual Machine Configuration
      | attribute   | value            |
      | name        | Cuke Test VM     |
@@ -44,20 +44,10 @@ Feature: Managment of Virtual Machines
      | public_address  | *                                                              |
      | ip_address      | *                                                              |
      | vnet_uri        | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/*         |
-    And delete the virtual machine
-   
-  Scenario: Network access for running Virtual Machine
-    Given a Virtual Machine started with attributes
-     | attribute   | value             |
-     | name        | Cuke Test VM      |
-     | description | Cucumber test VM  |
-     | vmtemplate  | RHEL5-Small       |
-    And the following attributes after creation
-     | attribute   | value                               |
-     | run_state   | STARTED                             |
-    Then it should be possible to log into the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
-
+    And it should be possible to delete the Virtual Machine
+   
   Scenario: Shutdown Virtual Machine
     Given a Virtual Machine started with attributes
      | attribute   | value             |
@@ -75,6 +65,7 @@ Feature: Managment of Virtual Machines
      | start           | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/start     |
     And it should not be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should not be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Restart STOPPED Virtual Machine
     Given a Virtual Machine started with attributes
@@ -90,6 +81,7 @@ Feature: Managment of Virtual Machines
      | run_state  | STARTED  |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Reboot Virtual Machine
     Given a Virtual Machine that has been verified running and is in run_state STARTED with attributes
@@ -97,17 +89,115 @@ Feature: Managment of Virtual Machines
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
      | vmtemplate  | RHEL5-Small      |
+     | run_state   | STARTED          |
     Then if it is rebooted it will have the following run_state
      | attribute | value    |
      | run_state | STARTED  |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
 
-  Scenario: Delete a stopped Virtual Machine
-    Given a Virtual Machine that has been verified stopped and is in run_state STOPPED with attributes
+  Scenario: Validate support for RHEL5-Small Virtual Machine
+    Given the following Virtual Machine configuration
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
-     | vmtemplate  | RHEL5-Small      |
-    Then if it is deleted it should not be returned in a query for Virtual Machines
+    Then create a "RHEL5-Small" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to mount a Volume and write a file to the volume 
 
+  Scenario: Validate support for RHEL5-Medium Virtual Machine
+    Given the following Virtual Machine configuration
+     | attribute   | value            |
+     | name        | Cuke Test VM     |
+     | description | Cucumber test VM |
+    Then create a "RHEL5-Medium" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to mount a Volume and write a file to the volume 
+
+  Scenario: Validate support for RHEL5-Large Virtual Machine
+    Given the following Virtual Machine configuration
+     | attribute   | value            |
+     | name        | Cuke Test VM     |
+     | description | Cucumber test VM |
+    Then create a "RHEL5-Large" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to mount a Volume and write a file to the volume 
+
+  Scenario: Validate support for W2K8-Large Virtual Machine
+    Given the following Virtual Machine configuration
+     | attribute   | value            |
+     | name        | Cuke Test VM     |
+     | description | Cucumber test VM |
+    Then create a "W82K-Large" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
+
+  Scenario: Validate support for W2K8-Medium Virtual Machine
+    Given the following Virtual Machine configuration
+     | attribute   | value            |
+     | name        | Cuke Test VM     |
+     | description | Cucumber test VM |
+    Then create a "W82K-Medium" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
+
+  Scenario: Validate support for W2K8-Large Virtual Machine
+    Given the following Virtual Machine configuration
+     | attribute   | value            |
+     | name        | Cuke Test VM     |
+     | description | Cucumber test VM |
+    Then create a "W82K-Large" Virtual Machine
+    And it should have the following attributes
+     | attribute         | value                               |
+     | os                | Red Hat Enterprise Linux 5 (64-bit) |
+     | run_state         | STARTED                             |
+     | memory            | 4096MB of memory                    |
+     | data_disk         | 104857600                           |
+     | cpu               | 1 virtual CPU(s)                    |
+     | from_template_uri | /vmtemplates/25                     |
+    And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
+    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
