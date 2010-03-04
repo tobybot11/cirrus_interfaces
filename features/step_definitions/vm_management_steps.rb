@@ -5,21 +5,30 @@ Then /^it should be possible to delete the Virtual Machine$/ do
 end
 
 Given /^a Virtual Machine started with attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  @vm = create_vm_from_table_data(table)
+  vm.run_state.should be('STARTTED')
+  ping?(vm).should be_true
 end
 
 Given /^the following attributes after creation$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  validate_object(table, vm)
 end
 
-Then /^it should be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |arg1|
-  pending # express the regexp above with the code you wish you had
+Then /^it should be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
+  vm_up?(vm.interfaces.first[iface.to_sym]).should be_true
 end
 
-Then /^it should not be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |arg1|
-  pending # express the regexp above with the code you wish you had
+Then /^it should not be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
+  vm_down?(vm.interfaces.first[iface.to_sym]).should be_true
+end
+
+Then /^it should be possible to ping the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
+  ping?(vm.interfaces.first[iface.to_sym]).should be_true
+end
+
+Given /^and then shutdown with the following attributes$/ do |table|
+  @vm = vm.stop
+  validate_object(table, vm)
 end
 
 ####---- create/delete virtual machine
@@ -32,6 +41,7 @@ Then /^create a Virtual Machine which shall have the following attributes$/ do |
 end
 
 Then /^three controllers with the following URIs$/ do |table|
+  vm.controllers.length.should be(3)
   validate_object(table, vm.controllers)
 end
 
@@ -41,24 +51,19 @@ end
 
 ####---- shutdown
 Then /^when the Virtual Machine is sutdown it will have the following attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  @vm = vm.stop
+  validate_object(table, vm)
 end
 
 Then /^there should be one available controller$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
-end
-
-Given /^and shutdown with the folloing attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  vm.controllers.length.should be(1)
+  validate_object(table, vm.controllers)
 end
 
 ####---- restart
 Then /^if it is restarted it will have the following run_state$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  @vm = vm.start
+  validate_object(table, vm)
 end
 
 ####---- reboot
@@ -72,3 +77,16 @@ Then /^if it is rebooted it will have the following run_state$/ do |table|
   pending # express the regexp above with the code you wish you had
 end
 
+####---- start each template
+Given /^the following Virtual Machine configuration$/ do |table|
+  # table is a Cucumber::Ast::Table
+  pending # express the regexp above with the code you wish you had
+end
+
+Then /^create a "([^\"]*)" Virtual Machine$/ do |arg1|
+  pending # express the regexp above with the code you wish you had
+end
+
+Then /^it should have the following attributes$/ do |table|
+  validate_object(table, vm)
+end

@@ -24,7 +24,7 @@ Then /^the root_cluster shall have URI$/ do |table|
 end
 
 Then /^there will be one volume with URI$/ do |table|
-  user.vdc.volumes.length.should == 1
+  user.vdc.volumes.length.should be(1)
   validate_object(table, user.vdc.volumes.first)
 end
 
@@ -34,12 +34,12 @@ Then /^a cluster object shall exist with the following attributes$/ do |table|
 end
 
 Then /^two controllers with URIs$/ do |table|
-  user.cluster.controllers.length.should == 2
+  user.cluster.controllers.length.should be(2)
   validate_object(table, user.cluster.controllers)
 end
 
 Then /^two vnets with URIs$/ do |table|
-  user.cluster.vnets.length.should == 2
+  user.cluster.vnets.length.should be(2)
   table.hashes.each do |a|
     user.cluster.vnets[a['index'].to_i].uri.should == a['value']
   end
@@ -51,7 +51,7 @@ Then /^a volume object shall exist with the following attributes$/ do |table|
 end
 
 Then /^two vnets shall exist$/ do
-  user.vnets.length == 2
+  user.vnets.length be(2)
 end
 
 Then /^the first vnet shall have the following attributes$/ do |table|

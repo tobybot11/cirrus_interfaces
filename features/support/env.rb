@@ -33,24 +33,33 @@ module CaasHelpers
     end
   end
 
-  def cmd(vm, cmd)
+  def cmd(iface, cmd)
     cred, result = load_credentails('vm'), ''
-    Net::SSH.start(vm.interfaces.first[:public_address],cred['uid'],:password=>cred['password']) do |ssh|
+    Net::SSH.start(iface, cred['uid'],:password=>cred['password']) do |ssh|
       result = ssh.exec!(cmd)
     end; result
   end
 
-  def vm_up?(vm)
-    cmd(vm, 'id -nu').eql?(load_credentails('vm')['uid'])
+  def vm_up?(iface)
+    cmd(iface, 'id -nu').eql?(load_credentails('vm')['uid'])
   end
 
-  def vm_down?(vm)
+  def vm_down?(iface)
     begin
-      cmd(vm, 'id -nu').eql?(load_credentails('vm')['uid'])
+      cmd(iface, 'id -nu').eql?(load_credentails('vm')['uid'])
     rescue Errno::ETIMEDOUT
       true
     else
       false
+    end
+  end
+
+  def ping?(iface)
+    try_count = 0
+    unless try_count > MAX_RETRIES
+      Net::Ping::TCP.new(iface, 'http').ping?
+      try_count += 1
+      sleep(60)
     end
   end
 
@@ -129,8 +138,18 @@ def_matcher :have_value do |receiver, matcher, args|
 end
 
 ####---------------------------------------------------------------------------
+def_matcher :be do |receiver, matcher, args|
+  args.first.eql?(receiver)
+end
+
+####---------------------------------------------------------------------------
 def_matcher :be_nil do |receiver, matcher, args|
   receiver.nil?
+end
+
+####---------------------------------------------------------------------------
+def_matcher :be_true do |receiver, matcher, args|
+  receiver
 end
 
 ####---------------------------------------------------------------------------

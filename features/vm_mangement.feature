@@ -114,6 +114,7 @@ Feature: Managment of Virtual Machines
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Validate support for RHEL5-Medium Virtual Machine
     Given the following Virtual Machine configuration
@@ -132,6 +133,7 @@ Feature: Managment of Virtual Machines
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Validate support for RHEL5-Large Virtual Machine
     Given the following Virtual Machine configuration
@@ -150,6 +152,7 @@ Feature: Managment of Virtual Machines
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Validate support for W2K8-Large Virtual Machine
     Given the following Virtual Machine configuration
@@ -166,7 +169,8 @@ Feature: Managment of Virtual Machines
      | cpu               | 1 virtual CPU(s)                    |
      | from_template_uri | /vmtemplates/25                     |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
-    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Validate support for W2K8-Medium Virtual Machine
     Given the following Virtual Machine configuration
@@ -183,7 +187,8 @@ Feature: Managment of Virtual Machines
      | cpu               | 1 virtual CPU(s)                    |
      | from_template_uri | /vmtemplates/25                     |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
-    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
 
   Scenario: Validate support for W2K8-Large Virtual Machine
     Given the following Virtual Machine configuration
@@ -200,4 +205,5 @@ Feature: Managment of Virtual Machines
      | cpu               | 1 virtual CPU(s)                    |
      | from_template_uri | /vmtemplates/25                     |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
-    And it should be possible to ping into the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
+    And it should be possible to delete the Virtual Machine
