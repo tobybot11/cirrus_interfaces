@@ -73,7 +73,7 @@ Feature: Managment of Virtual Machines
      | name        | Cuke Test VM      |
      | description | Cucumber test VM  |
      | vmtemplate  | RHEL5-Small       |
-    And and shutdown with the folloing attributes
+    And and then shutdown with the following attributes
      | attribute   | value   |
      | run_state   | STOPPED |
     Then if it is restarted it will have the following run_state
@@ -84,12 +84,11 @@ Feature: Managment of Virtual Machines
     And it should be possible to delete the Virtual Machine
 
   Scenario: Reboot Virtual Machine
-    Given a Virtual Machine that has been verified running and is in run_state STARTED with attributes
+    Given a Virtual Machine started with attributes
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
      | vmtemplate  | RHEL5-Small      |
-     | run_state   | STARTED          |
     Then if it is rebooted it will have the following run_state
      | attribute | value    |
      | run_state | STARTED  |
@@ -126,9 +125,9 @@ Feature: Managment of Virtual Machines
      | attribute         | value                               |
      | os                | Red Hat Enterprise Linux 5 (64-bit) |
      | run_state         | STARTED                             |
-     | memory            | 4096MB of memory                    |
+     | memory            | 8192MB of memory                    |
      | data_disk         | 104857600                           |
-     | cpu               | 1 virtual CPU(s)                    |
+     | cpu               | 2 virtual CPU(s)                    |
      | from_template_uri | /vmtemplates/25                     |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
@@ -145,29 +144,29 @@ Feature: Managment of Virtual Machines
      | attribute         | value                               |
      | os                | Red Hat Enterprise Linux 5 (64-bit) |
      | run_state         | STARTED                             |
-     | memory            | 4096MB of memory                    |
+     | memory            | 16384MB of memory                   |
      | data_disk         | 104857600                           |
-     | cpu               | 1 virtual CPU(s)                    |
+     | cpu               | 4 virtual CPU(s)                    |
      | from_template_uri | /vmtemplates/25                     |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
     And it should be possible to delete the Virtual Machine
 
-  Scenario: Validate support for W2K8-Large Virtual Machine
+  Scenario: Validate support for W2K8-Small Virtual Machine
     Given the following Virtual Machine configuration
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
-    Then create a "W82K-Large" Virtual Machine
+    Then create a "W82K-Small" Virtual Machine
     And it should have the following attributes
-     | attribute         | value                               |
-     | os                | Red Hat Enterprise Linux 5 (64-bit) |
-     | run_state         | STARTED                             |
-     | memory            | 4096MB of memory                    |
-     | data_disk         | 104857600                           |
-     | cpu               | 1 virtual CPU(s)                    |
-     | from_template_uri | /vmtemplates/25                     |
+     | attribute         | value                                  |
+     | os                | Microsoft Windows Server 2008 (64-bit) |
+     | run_state         | STARTED                                |
+     | memory            | 4096MB of memory                       |
+     | data_disk         | 104857600                              |
+     | cpu               | 1 virtual CPU(s)                       |
+     | from_template_uri | /vmtemplates/25                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
@@ -179,13 +178,13 @@ Feature: Managment of Virtual Machines
      | description | Cucumber test VM |
     Then create a "W82K-Medium" Virtual Machine
     And it should have the following attributes
-     | attribute         | value                               |
-     | os                | Red Hat Enterprise Linux 5 (64-bit) |
-     | run_state         | STARTED                             |
-     | memory            | 4096MB of memory                    |
-     | data_disk         | 104857600                           |
-     | cpu               | 1 virtual CPU(s)                    |
-     | from_template_uri | /vmtemplates/25                     |
+     | attribute         | value                                  |
+     | os                | Microsoft Windows Server 2008 (64-bit) |
+     | run_state         | STARTED                                |
+     | memory            | 8192MB of memory                       |
+     | data_disk         | 104857600                              |
+     | cpu               | 2 virtual CPU(s)                       |
+     | from_template_uri | /vmtemplates/25                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
@@ -197,13 +196,13 @@ Feature: Managment of Virtual Machines
      | description | Cucumber test VM |
     Then create a "W82K-Large" Virtual Machine
     And it should have the following attributes
-     | attribute         | value                               |
-     | os                | Red Hat Enterprise Linux 5 (64-bit) |
-     | run_state         | STARTED                             |
-     | memory            | 4096MB of memory                    |
-     | data_disk         | 104857600                           |
-     | cpu               | 1 virtual CPU(s)                    |
-     | from_template_uri | /vmtemplates/25                     |
+     | attribute         | value                                  |
+     | os                | Microsoft Windows Server 2008 (64-bit) |
+     | run_state         | STARTED                                |
+     | memory            | 16384MB of memory                      |
+     | data_disk         | 104857600                              |
+     | cpu               | 4 virtual CPU(s)                       |
+     | from_template_uri | /vmtemplates/25                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine

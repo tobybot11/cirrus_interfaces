@@ -6,8 +6,8 @@ end
 
 Given /^a Virtual Machine started with attributes$/ do |table|
   @vm = create_vm_from_table_data(table)
-  vm.run_state.should be('STARTTED')
-  ping?(vm).should be_true
+  vm.run_state.should be('STARTED')
+  ping?(vm.interfaces.first[:public_address]).should be_true
 end
 
 Given /^the following attributes after creation$/ do |table|
@@ -15,15 +15,27 @@ Given /^the following attributes after creation$/ do |table|
 end
 
 Then /^it should be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
-  vm_up?(vm.interfaces.first[iface.to_sym]).should be_true
+  if iface.eql?('ip_address')
+    vm_up?(vm.interfaces.first[iface.to_sym]).should be_true if test_private_ip?
+  else
+    vm_up?(vm.interfaces.first[iface.to_sym]).should be_true
+  end
 end
 
 Then /^it should not be possible to log into the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
-  vm_down?(vm.interfaces.first[iface.to_sym]).should be_true
+  if iface.eql?('ip_address')
+    vm_down?(vm.interfaces.first[iface.to_sym]).should be_true if test_private_ip?
+  else
+    vm_down?(vm.interfaces.first[iface.to_sym]).should be_true
+  end
 end
 
 Then /^it should be possible to ping the Virtual Machine through its network interface on its "([^\"]*)"$/ do |iface|
-  ping?(vm.interfaces.first[iface.to_sym]).should be_true
+  if iface.eql?('ip_address')
+    ping?(vm.interfaces.first[iface.to_sym]).should be_true if test_private_ip?
+  else
+    ping?(vm.interfaces.first[iface.to_sym]).should be_true
+  end
 end
 
 Given /^and then shutdown with the following attributes$/ do |table|
@@ -67,26 +79,25 @@ Then /^if it is restarted it will have the following run_state$/ do |table|
 end
 
 ####---- reboot
-Given /^a Virtual Machine that has been verified running and is in run_state STARTED with attributes$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
-end
-
 Then /^if it is rebooted it will have the following run_state$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  @vm = vm.stop
+  validate_object(table, vm)
 end
 
 ####---- start each template
 Given /^the following Virtual Machine configuration$/ do |table|
-  # table is a Cucumber::Ast::Table
-  pending # express the regexp above with the code you wish you had
+  @params =  vm_create_attributes(table)
 end
 
 Then /^create a "([^\"]*)" Virtual Machine$/ do |arg1|
-  pending # express the regexp above with the code you wish you had
+  create_vm_from_table_data_params
 end
 
 Then /^it should have the following attributes$/ do |table|
   validate_object(table, vm)
+end
+
+Then /^it should be possible to mount a Volume and write a file to the volume$/ do
+  mount_volume(vm.interfaces.first[:public_address])
+  volume_available?(vm.interfaces.first[:public_address]).should be_true
 end

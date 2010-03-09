@@ -19,4 +19,4 @@ rdoc
 pkg
 
 ## PROJECT::SPECIFIC
-credentials.yml
+config.yml

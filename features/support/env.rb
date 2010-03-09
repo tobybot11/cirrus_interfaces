@@ -34,19 +34,21 @@ module CaasHelpers
   end
 
   def cmd(iface, cmd)
-    cred, result = load_credentails('vm'), ''
+    cred, result = load_config('vm'), ''
     Net::SSH.start(iface, cred['uid'],:password=>cred['password']) do |ssh|
       result = ssh.exec!(cmd)
     end; result
   end
 
   def vm_up?(iface)
-    cmd(iface, 'id -nu').eql?(load_credentails('vm')['uid'])
+    if ping?(iface)
+      cmd(iface, 'id -nu').eql?(load_config('vm')['uid'])
+    else; false; end
   end
 
   def vm_down?(iface)
     begin
-      cmd(iface, 'id -nu').eql?(load_credentails('vm')['uid'])
+      cmd(iface, 'id -nu').eql?(load_config('vm')['uid'])
     rescue Errno::ETIMEDOUT
       true
     else
@@ -54,23 +56,27 @@ module CaasHelpers
     end
   end
 
-  def ping?(iface)
-    try_count = 0
-    unless try_count > MAX_RETRIES
-      Net::Ping::TCP.new(iface, 'http').ping?
-      try_count += 1
-      sleep(60)
-    end
+  def ping?(iface, count=0)
+    if count < MAX_RETRIES
+      unless Net::Ping::TCP.new(iface, 'http').ping?
+        sleep(60)
+        ping?(iface, count + 1)
+      else; true; end
+    else; false; end
   end
 
-  def mount_volume(vm, vol)
-    cmd(vm, "mount #{vol.webdav.gsub(/nfs:\/\//,'')} /data")
+  def test_private_ip?
+    load_config('config')['test_private_ip']
   end
 
-  def volume_available?(vm, vol)
+  def mount_volume(iface, vol)
+    cmd(iface, "mount #{vol.webdav.gsub(/nfs:\/\//,'')} /data")
+  end
+
+  def volume_available?(iface, vol)
     file = "/data/test_file-#{Time.now.to_s.gsub(/ |:/,'-')}"
-    cmd(vm, "touch #{file}")
-    result = cmd(vm, "ls ")
+    cmd(iface, "touch #{file}")
+    result = cmd(iface, "ls ")
     cmd(vm, "rm -f #{file}")
     result.eql?(file)
   end
@@ -86,7 +92,7 @@ module CaasHelpers
     end
   end
 
-  def create_vms(count, args)
+  def create_vms(args, count = 1)
     (1..count).map do |c|
       Thread.new do
         user.create_vm(:name=>args[:name]+"-#{c}", :description=>args[:description], :vmtemplate=>args[:vmtemplate])
@@ -99,9 +105,16 @@ module CaasHelpers
     @vm = user.create_vm(:name=>params[:name], :description=>params[:description], :vmtemplate=>params[:vmtemplate])
   end
 
+  def create_vm_from_table_data_params
+    if (params)
+      @vm = user.create_vm(:name=>params[:name], :description=>params[:description], :vmtemplate=>params[:vmtemplate])
+    end
+  end
+
   def vms_with_names_matching(reg)
     user.get_all_vms.select{|v| reg.match(v.name)}
   end
+
 end
 
 World(CaasHelpers)
