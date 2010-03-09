@@ -479,6 +479,11 @@ class CaaS
     rescue RestClient::ResourceNotFound
       sleep(1)
       try_count < CaaS::MAX_RETRIES ? retry : raise
+    rescue RestClient::RequestFailed => exp
+      if exp.http_code.eql?(409)
+        sleep(1)
+        try_count < CaaS::MAX_RETRIES ? retry : raise
+      else; raise; end
     end
   end
 
