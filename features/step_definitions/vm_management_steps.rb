@@ -1,9 +1,4 @@
 ####---- common
-Then /^it should be possible to delete the Virtual Machine$/ do
-  vm.delete
-  vms_with_names_matching(/^#{params[:name]}/).should be_empty?
-end
-
 Given /^a Virtual Machine started with attributes$/ do |table|
   @vm = create_vm_from_table_data(table)
   vm.run_state.should be('STARTED')
@@ -43,6 +38,11 @@ Given /^and then shutdown with the following attributes$/ do |table|
   validate_object(table, vm)
 end
 
+Then /^it should be possible to delete the Virtual Machine$/ do
+  vm.delete
+  vm_with_uri_matching(vm.uri).should be_nil
+end
+
 ####---- create/delete virtual machine
 Given /^the following Virtual Machine Configuration$/ do |table|
   create_vm_from_table_data(table)
@@ -63,7 +63,7 @@ end
 
 ####---- shutdown
 Then /^when the Virtual Machine is sutdown it will have the following attributes$/ do |table|
-  @vm = vm.stop
+  retry_until_state(vm.stop, 'STOPPED').should be_true
   validate_object(table, vm)
 end
 
@@ -74,13 +74,13 @@ end
 
 ####---- restart
 Then /^if it is restarted it will have the following run_state$/ do |table|
-  @vm = vm.start
+  retry_until_state(vm.start, 'STARTED').should be_true
   validate_object(table, vm)
 end
 
 ####---- reboot
 Then /^if it is rebooted it will have the following run_state$/ do |table|
-  @vm = vm.stop
+  retry_until_state(vm.reboot, 'STARTED').should be_true
   validate_object(table, vm)
 end
 

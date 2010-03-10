@@ -35,14 +35,16 @@ module CaasHelpers
 
   def cmd(iface, cmd)
     cred, result = load_config('vm'), ''
-    Net::SSH.start(iface, cred['uid'],:password=>cred['password']) do |ssh|
+    Net::SSH.start(iface, cred['uid'],:password=>cred['new_password']) do |ssh|
       result = ssh.exec!(cmd)
     end; result
   end
 
   def vm_up?(iface)
     if ping?(iface)
-      cmd(iface, 'id -nu').eql?(load_config('vm')['uid'])
+      cred = load_config('vm')
+      res = `features/support/change_password.exp #{iface} '#{cred['password']}' '#{cred['new_password']}'`
+      cmd(iface, 'id -nu').chomp.eql?(cred['uid'])
     else; false; end
   end
 
@@ -61,6 +63,16 @@ module CaasHelpers
       unless Net::Ping::TCP.new(iface, 'http').ping?
         sleep(60)
         ping?(iface, count + 1)
+      else; true; end
+    else; false; end
+  end
+
+  def retry_until_run_state(vm, state, count=0)
+    sleep(60)
+    if count < MAX_RETRIES
+      vm.reload
+      unless vm.run_state.eql?(state)
+        retry_until_state(vm, state, count + 1)
       else; true; end
     else; false; end
   end
@@ -111,8 +123,8 @@ module CaasHelpers
     end
   end
 
-  def vms_with_names_matching(reg)
-    user.get_all_vms.select{|v| reg.match(v.name)}
+  def vm_with_uri_matching(uri)
+    user.get_all_vms.select{|v| v.uri.eql?(uri)}.first
   end
 
 end
@@ -166,6 +178,6 @@ def_matcher :be_true do |receiver, matcher, args|
 end
 
 ####---------------------------------------------------------------------------
-def_matcher :be_empty? do |receiver, matcher, args|
+def_matcher :be_empty do |receiver, matcher, args|
   receiver.empty?
 end
