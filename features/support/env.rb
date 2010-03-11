@@ -35,7 +35,7 @@ module CaasHelpers
 
   def cmd(iface, cmd)
     cred, result = load_config('vm'), ''
-    Net::SSH.start(iface, cred['uid'],:password=>cred['new_password']) do |ssh|
+    Net::SSH.start(iface, cred['uid'],:password=>cred['new_password'], :user_known_hosts_file => '/dev/null', :paranoid=>false) do |ssh|
       result = ssh.exec!(cmd)
     end; result
   end

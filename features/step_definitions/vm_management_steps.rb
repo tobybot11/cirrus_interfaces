@@ -34,7 +34,7 @@ Then /^it should be possible to ping the Virtual Machine through its network int
 end
 
 Given /^and then shutdown with the following attributes$/ do |table|
-  @vm = vm.stop
+  retry_until_run_state(vm.stop, 'STOPPED').should be_true
   validate_object(table, vm)
 end
 
@@ -63,7 +63,7 @@ end
 
 ####---- shutdown
 Then /^when the Virtual Machine is sutdown it will have the following attributes$/ do |table|
-  retry_until_state(vm.stop, 'STOPPED').should be_true
+  retry_until_run_state(vm.stop, 'STOPPED').should be_true
   validate_object(table, vm)
 end
 
@@ -74,13 +74,13 @@ end
 
 ####---- restart
 Then /^if it is restarted it will have the following run_state$/ do |table|
-  retry_until_state(vm.start, 'STARTED').should be_true
+  retry_until_run_state(vm.start, 'STARTED').should be_true
   validate_object(table, vm)
 end
 
 ####---- reboot
 Then /^if it is rebooted it will have the following run_state$/ do |table|
-  retry_until_state(vm.reboot, 'STARTED').should be_true
+  retry_until_run_state(vm.reboot, 'STARTED').should be_true
   validate_object(table, vm)
 end
 
@@ -89,7 +89,8 @@ Given /^the following Virtual Machine configuration$/ do |table|
   @params =  vm_create_attributes(table)
 end
 
-Then /^create a "([^\"]*)" Virtual Machine$/ do |arg1|
+Then /^create a "([^\"]*)" Virtual Machine$/ do |template|
+  @params[:vmtemplate] = template
   create_vm_from_table_data_params
 end
 

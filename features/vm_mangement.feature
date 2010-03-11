@@ -33,10 +33,6 @@ Feature: Managment of Virtual Machines
      | stop            | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/stop      |
      | reboot          | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/reboot    |
      | hibernate       | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/hibernate |
-    And two vnets with URIs
-     | index           | value                                                          |
-     | 0               | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/301       |
-     | 1               | /accounts/443/clouds/307/vdcs/290/clusters/281/vnets/302       |
     And the following interface attributes
      | attribute       | value                                                          |
      | mac_address     | not_available                                                  |
@@ -61,8 +57,8 @@ Feature: Managment of Virtual Machines
      | attribute   | value   |
      | run_state   | STOPPED |
     And there should be one available controller
-     | index           | value                                                          |
-     | start           | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/start     |
+     |  attribute      | value                                                      |
+     | start           | /accounts/443/clouds/307/vdcs/290/clusters/281/vms/*/start |
     And it should not be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should not be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
