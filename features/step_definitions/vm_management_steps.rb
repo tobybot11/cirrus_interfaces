@@ -99,6 +99,6 @@ Then /^it should have the following attributes$/ do |table|
 end
 
 Then /^it should be possible to mount a Volume and write a file to the volume$/ do
-  mount_volume(vm.interfaces.first[:public_address])
-  volume_available?(vm.interfaces.first[:public_address]).should be_true
+  mount_volume(vm.interfaces.first[:public_address], user.volume)
+  volume_available?(vm.interfaces.first[:public_address], user.volume).should be_true
 end

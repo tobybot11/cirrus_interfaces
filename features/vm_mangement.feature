@@ -124,7 +124,7 @@ Feature: Managment of Virtual Machines
      | memory            | 8192MB of memory                    |
      | data_disk         | 104857600                           |
      | cpu               | 2 virtual CPU(s)                    |
-     | from_template_uri | /vmtemplates/25                     |
+     | from_template_uri | /vmtemplates/24                     |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
@@ -143,7 +143,7 @@ Feature: Managment of Virtual Machines
      | memory            | 16384MB of memory                   |
      | data_disk         | 104857600                           |
      | cpu               | 4 virtual CPU(s)                    |
-     | from_template_uri | /vmtemplates/25                     |
+     | from_template_uri | /vmtemplates/23                     |
     And it should be possible to log into the Virtual Machine through its network interface on its "public_address"
     And it should be possible to log into the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to mount a Volume and write a file to the volume 
@@ -154,7 +154,7 @@ Feature: Managment of Virtual Machines
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
-    Then create a "W82K-Small" Virtual Machine
+    Then create a "W2K8-Small" Virtual Machine
     And it should have the following attributes
      | attribute         | value                                  |
      | os                | Microsoft Windows Server 2008 (64-bit) |
@@ -162,7 +162,7 @@ Feature: Managment of Virtual Machines
      | memory            | 4096MB of memory                       |
      | data_disk         | 104857600                              |
      | cpu               | 1 virtual CPU(s)                       |
-     | from_template_uri | /vmtemplates/25                        |
+     | from_template_uri | /vmtemplates/26                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
@@ -172,7 +172,7 @@ Feature: Managment of Virtual Machines
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
-    Then create a "W82K-Medium" Virtual Machine
+    Then create a "W2K8-Medium" Virtual Machine
     And it should have the following attributes
      | attribute         | value                                  |
      | os                | Microsoft Windows Server 2008 (64-bit) |
@@ -180,7 +180,7 @@ Feature: Managment of Virtual Machines
      | memory            | 8192MB of memory                       |
      | data_disk         | 104857600                              |
      | cpu               | 2 virtual CPU(s)                       |
-     | from_template_uri | /vmtemplates/25                        |
+     | from_template_uri | /vmtemplates/27                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
@@ -190,7 +190,7 @@ Feature: Managment of Virtual Machines
      | attribute   | value            |
      | name        | Cuke Test VM     |
      | description | Cucumber test VM |
-    Then create a "W82K-Large" Virtual Machine
+    Then create a "W2K8-Large" Virtual Machine
     And it should have the following attributes
      | attribute         | value                                  |
      | os                | Microsoft Windows Server 2008 (64-bit) |
@@ -198,7 +198,7 @@ Feature: Managment of Virtual Machines
      | memory            | 16384MB of memory                      |
      | data_disk         | 104857600                              |
      | cpu               | 4 virtual CPU(s)                       |
-     | from_template_uri | /vmtemplates/25                        |
+     | from_template_uri | /vmtemplates/28                        |
     And it should be possible to ping the Virtual Machine through its network interface on its "public_address"
     And it should be possible to ping the Virtual Machine through its network interface on its "ip_address"
     And it should be possible to delete the Virtual Machine
